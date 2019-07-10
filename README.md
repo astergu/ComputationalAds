@@ -1,10 +1,52 @@
 # 计算广告 Computational Advertising
 
-在计算广告系统中，一个可以携带广告请求的用户流量到达后台时，系统需要在较短时间（一般要求不超过 100ms）内返回一个或多个排序好的广告列表；在广告系统中，一般最后一步的排序 *score = bid $\times$ pct<sup>alpha</sup>*；其中 *alpha* 参数控制排序倾向，如果*alpha*<1，则倾向于*pctr*，否则倾向于*bid*；这里的核心因子*pctr*就是通常所说的点击率（predicted click through rate）.
+自1993年GNN出售第一个可点击的banner横幅广告开始，互联网广告在全世界拉开了帷幕。1993-1996是启蒙时代，1997-2002是直销时代，2003-2011是网盟时代，2012至今程序化时代。（from：梁丽丽《程序化广告：个性化精准投放实用手册》）。
+
+20余年时间里，互联网广告迅速发展，经历了四个时代，也出现了四种广告模式。四种广告模式分别是，合约广告、广告网络（网盟）、程序化广告、原生广告，四种模式是伴随着互联网广告行业的进步而诞生的，广告行业中的几大角色都是共同推动者。目前，这几种交易模式都是共同存在的，但是行业份额占比不同，目前程序化广告正在迅速发展。
+
+广告是一种商业，那就有它的定价模式，有了定价模式才能形成产业链，通过定价模式在上下游间结算。
+
+![定价方式](https://pic3.zhimg.com/v2-4eb0c156d3f86236be88d6429c13c802_r.jpg)
+
+常用的定价方式，包括展示类和转化类，展示类常用于品牌广告，转化类常用于效果广告，具体介绍如下。
+
+CPT：Cost Per Time，按时长计费，即按照占据此广告的时长计费，在高价值的广告位上常见，例如开屏广告、跳一跳的广告等
+
+CPM：Cost Per Mille，按展示量计费，即按照此广告的展示次数计费，以品牌展示类为主
+
+CPC：Cost Per Click，按点击量计费，即按照此广告的点击次数计费，关键词竞价常用，例如头条的信息流广告
+
+
+CPA：Cost Per Action，按行动量计费，即按照某些用户行为次数计费，CPA包括以下CPD、CPI、CPS等
+
+CPD：Cost Per Download，按下载量计费，即按用户完成APP下载计费，APP、游戏等常用
+
+CPI：Cost Per Install，按安装量计费，即按用户激活APP计费，这种比较少，一般是广告主内部衡量效果的指标
+
+CPS：Cost Per Sales，按销售量计费，即按完成订单的用户数量结算，以电商类为主
+
+
+## SSP, DSP, RTB
+
+![中国程序化广告技术生态图](./img/China-Programmatic-Ad-Tech_2018Q4_R-2.jpg)
+
+### 实时竞价 RTB (Real-time Bidding)
+
+RTB的运作方式并不复杂：当一个用户打开某个网页，这个网页中的广告位信息通过SSP（Supply Side Platform）供应方平台提供给广告交易平台（Ad Exchange），同时，这个用户所用的浏览器获得的Cookies的标签进入DMP（Data Management Platform）管理平台进行分析，将分析所得到的用户属性的标签也传送给Ad Exchange；接下来，Ad Exchange 将这些信息向所有接入到交易平台的广告主或者广告代理商的DSP（Demand Side Platform）需求方平台发出指令，DSP开始向Ad Exchange实时出价，进入RTB模式；经过竞价，用户的属性标签一致，且出价最高的DSP就获得了这次展示广告的机会，广告自动返回到用户的浏览器所打开的这个网页中——这一系列的过程非常快，通常是在80－100毫秒中完成的。
+
+### 需求方平台 DSP (Deman Side Platform)
+
+DSP（Demand Side Platform）是需求方平台，负责接受投放需求，找人群数据，实现投放竞价等功能的那么一个中央管理控制平台。DMP（Data Management Platform）是数据管理平台，负责数据汇集和按需要与DSP进行数据交换。
+
+所以说，DMP是整个DSP的核心，也是智能广告投放的精髓。
+
+
 
 ## 点击率预估 (CTR)
 
-点击率预估是计算广告中非常重要的模块，预估一个用户对光奥的点击概率，从而提升广告效果。
+在计算广告系统中，一个可以携带广告请求的用户流量到达后台时，系统需要在较短时间（一般要求不超过 100ms）内返回一个或多个排序好的广告列表；在广告系统中，一般最后一步的排序 *score = bid * pctr <sup>alpha</sup>*；其中 *alpha* 参数控制排序倾向，如果*alpha*<1，则倾向于*pctr*，否则倾向于*bid*；这里的核心因子*pctr*就是通常所说的点击率（predicted click through rate）.
+
+点击率预估是计算广告中非常重要的模块，预估一个用户对广告的点击概率，从而提升广告效果。
 
 ### 特征表示 Feature Representation
 
@@ -258,6 +300,7 @@ Amazon在2001年提出的用于推荐领域的一个算法，是推荐领域最�
 10. [Wide & Deep Learning for Recommender System]
 11. [Deep Neural Networks for YouTube Recommendations]
 12. [Predictive Model Performance: Offline and Online Evaluations]
+13. [Personalized Click Prediction in Sponsored Search](./papers/coec.md)
 
 ### 参考链接
 
