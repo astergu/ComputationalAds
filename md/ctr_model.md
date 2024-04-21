@@ -3,7 +3,7 @@
 	- [主流算法](#主流算法)
 		- [Logistic Regression](#logistic-regression)
 		- [LR + GBDT](#lr--gbdt)
-		- [Deep Interest Network (DIN)](#deep-interest-network-din)
+		- [Deep Interest Network (DIN), 2017](#deep-interest-network-din-2017)
 		- [FM/FFM](#fmffm)
 			- [FM](#fm)
 			- [FFM (Field-aware Factorization Machine)](#ffm-field-aware-factorization-machine)
@@ -92,11 +92,12 @@ GBDT优势在于处理连续值特征，如用户历史点击率、用户历史�
 
 但是大多数推荐系统中出现的是大规模的离散化特征，使用GBDT需要首先统计成连续值特征(embedding)，需要耗费时间，GBDT具有记忆性强的特点，不利于挖掘长尾特征。而且GBDT虽然具有一定组合特征能力，但是组合的能力十分有限，远不能与DNN相比。
 
-### Deep Interest Network (DIN)
+### Deep Interest Network (DIN), 2017
 
-用户场景很简单，就是在一个电商网站或APP找那个给用户推荐广告。
+在电商场景下，CTR预估面临的问题是，用户的兴趣多种多样，存在于浏览、点击、加购物车、购买等等各类行为中，我们怎么样根据繁多的用户行为序列去预估当前的点击概率。[深度兴趣网络DIN](../papers/deep_interest_network.pdf)引入注意力（attention）机制，在预测时，对用户不同行为的注意力不一样。
 
-注意力机制，就是模型在预测的时候，对用户不同行为的注意力是不一样的。
+在此之前，通常会一碗水端平地考虑所有行为的影响。
+
 
 ![注意力机制](https://pic4.zhimg.com/v2-b8251f4d2a41f1a7de359c330a355530_1440w.jpg?source=172ae18b)
 
