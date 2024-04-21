@@ -1,11 +1,9 @@
 - [主流CTR模型演化](#主流ctr模型演化)
 	- [深度CTR模型的基本框架](#深度ctr模型的基本框架)
 	- [主流算法](#主流算法)
-		- [逻辑回归 Logistic Regression](#逻辑回归-logistic-regression)
+		- [Logistic Regression](#logistic-regression)
 		- [LR + GBDT](#lr--gbdt)
 		- [Deep Interest Network (DIN)](#deep-interest-network-din)
-			- [贡献点](#贡献点)
-			- [用户行为](#用户行为)
 		- [FM/FFM](#fmffm)
 			- [FM](#fm)
 			- [FFM (Field-aware Factorization Machine)](#ffm-field-aware-factorization-machine)
@@ -64,32 +62,22 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
 
 ## 深度CTR模型的基本框架
 
-典型的深度CTR模型可以分成以下四个部分：输入、特征嵌入（Embedding）、特征交互（有时候也称为特征提取）和输出。
+典型的深度CTR模型可以分成以下四个部分：`输入`、`特征嵌入（Embedding）`、`特征交互`（有时候也称为特征提取）和`输出`。
 
-- **输入**
-
-输入通常包含若干个<特征ID, 特征值>对，当然也可以One-Hot Encoding展开。
-
-- **特征嵌入（Embedding）**
-
-在CTR任务中数据特征呈现高维、稀疏的特点，假设特征数为N，直接将这些特征进行One-Hot Encoding构造二阶及以上特征时候会产生巨大的参数数量，以FM的二阶项为例子，如一万个特征，两两构造二阶特征时将会产生一亿规模的特征权重参数。
-
-Embedding可以减小模型复杂度，具体过程如下：
-
-通过矩阵乘法将1\*N的离散特征向量通过维度为N\*k的参数矩阵W压缩成1\*k的低维度稠密向量，通常k<<N，参数从N^2降到N\*k。
-
-- **特征交互**
-
-经过特征嵌入可以获得稠密向量，在特征交互模块中设计合理的模型结构将稠密向量变成标量，该模块直接决定模型的质量好坏。
-
-- **输出**
-
-将特征交互模块输出的标量用sigmoid函数映射到[0, 1]，即表示CTR。
+- `输入`
+  - 输入通常包含若干个<特征ID, 特征值>对，当然也可以One-Hot Encoding展开。
+- `特征嵌入（Embedding)`
+  - 在CTR任务中数据特征呈现高维、稀疏的特点，假设特征数为N，直接将这些特征进行One-Hot Encoding构造二阶及以上特征时候会产生巨大的参数数量，以FM的二阶项为例子，如一万个特征，两两构造二阶特征时将会产生一亿规模的特征权重参数。
+  - Embedding可以减小模型复杂度，具体过程如下：通过矩阵乘法将$1\times N$的离散特征向量通过维度为$N\times k$的参数矩阵$W$压缩成$1\times k$的低维度稠密向量，通常$k\ll N$，参数从$N^2$降到$N\times k$。
+- `特征交互`
+  - 经过特征嵌入可以获得稠密向量，在特征交互模块中设计合理的模型结构将稠密向量变成标量，该模块直接决定模型的质量好坏。
+- `输出`
+  - 将特征交互模块输出的标量用sigmoid函数映射到[0, 1]，即表示CTR。
 
 
 ## 主流算法
 
-### 逻辑回归 Logistic Regression
+### Logistic Regression
 
 LR一直是CTR预估的benchmark模型，具有简单、易于并行化实现、可解释性强等优点，但是LR模型中的特征是默认相互独立的，遇到具有交叉可能性的特征需进行大量的人工特征工程进行交叉(连续特征的离散化、特征交叉)，不能处理目标和特征之间的非线性关系。LR将特征加权求和并经sigmoid即得到CTR值。
 
@@ -98,7 +86,7 @@ LR一直是CTR预估的benchmark模型，具有简单、易于并行化实现、
 
 GBDT(Gradient Boost Decision Tree)是用来解决LR模型的特征组合问题。GBDT可以用来学习高阶非线性特征组合。对应树的一条路径。通常将一些连续值特征、值空间不大的categorical特征都丢给GBDT模型；空间很大的ID特征留在LR模型中训练，既能做高阶特征组合又可以利用线性模型易于处理大规模稀疏数据的优势。
 
-![formula](https://www.zhihu.com/equation?tex=f%28x%29%3Dlogistics%28gbdt%5C_tree_1%28X%29%2Bgbdt%5C_tree_2%28X%29%2B...%29)
+$f(x)=logistics(gbdtree_1(X) gbdtree_2(X) ...)$
 
 GBDT优势在于处理连续值特征，如用户历史点击率、用户历史浏览次数等连续值。由于树的分裂算法，具有一定组合特征的能力。GBDT根据最优的分裂特征和该特征的最优分裂点，根据特征的分裂次数得到一个特征的重要性排序，GBDT减少了人工特征工程的工作量。
 
@@ -112,16 +100,10 @@ GBDT优势在于处理连续值特征，如用户历史点击率、用户历史�
 
 ![注意力机制](https://pic4.zhimg.com/v2-b8251f4d2a41f1a7de359c330a355530_1440w.jpg?source=172ae18b)
 
-#### 贡献点
-
-- 用GAUC代替AUC
-- 用Dice方法代替经典的PReLU激活函数
-- 介绍一种Adaptive的正则化方法
-
-
-
-#### 用户行为
-
+- 贡献点
+  - 用GAUC代替AUC
+  - 用Dice方法代替经典的PReLU激活函数
+  - 介绍一种Adaptive的正则化方法
 
 
 ### FM/FFM
