@@ -56,7 +56,7 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
 
 ![architect](http://aistar.site/image001.png)
 
-![algorithms](./algorithms.jpg)
+![algorithms](./image/algorithms.jpg)
 
 
 
