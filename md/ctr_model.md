@@ -1,22 +1,26 @@
 - [主流CTR模型演化](#主流ctr模型演化)
 	- [深度CTR模型的基本框架](#深度ctr模型的基本框架)
-	- [主流算法](#主流算法)
-		- [Logistic Regression](#logistic-regression)
-		- [LR + GBDT](#lr--gbdt)
-		- [Deep Interest Network (DIN), 2017](#deep-interest-network-din-2017)
-		- [FM/FFM](#fmffm)
-			- [FM](#fm)
-			- [FFM (Field-aware Factorization Machine)](#ffm-field-aware-factorization-machine)
-		- [GBDT+(LR,FM,FFM)](#gbdtlrfmffm)
-		- [DNN](#dnn)
-		- [Embedding+MLP](#embeddingmlp)
-		- [Wide\&Deep](#widedeep)
-		- [DeepFM](#deepfm)
-		- [DCN: Deep \& Cross Network](#dcn-deep--cross-network)
-		- [xDeepFM](#xdeepfm)
-		- [DIN](#din)
-	- [代码实现](#代码实现)
-		- [LR实现](#lr实现)
+	- [Logistic Regression](#logistic-regression)
+	- [LR + GBDT](#lr--gbdt)
+	- [Deep Neural Networks for Youtube Recommendation (Covington, et al., 2016)](#deep-neural-networks-for-youtube-recommendation-covington-et-al-2016)
+	- [Wide \& Deep (Cheng, Heng-Tze, et al., 2016)](#wide--deep-cheng-heng-tze-et-al-2016)
+	- [Deep Interest Network (Zhou, Guorui, et al., 2018)](#deep-interest-network-zhou-guorui-et-al-2018)
+		- [主要贡献点](#主要贡献点)
+		- [背景](#背景)
+		- [模型](#模型)
+		- [代码实现](#代码实现)
+	- [FM/FFM](#fmffm)
+		- [FM](#fm)
+		- [FFM (Field-aware Factorization Machine)](#ffm-field-aware-factorization-machine)
+	- [GBDT+(LR,FM,FFM)](#gbdtlrfmffm)
+	- [DNN](#dnn)
+	- [Embedding+MLP](#embeddingmlp)
+	- [Wide\&Deep](#widedeep)
+	- [DeepFM](#deepfm)
+	- [DCN: Deep \& Cross Network](#dcn-deep--cross-network)
+	- [xDeepFM](#xdeepfm)
+- [代码实现](#代码实现-1)
+	- [LR实现](#lr实现)
 - [工程问题](#工程问题)
 	- [线上serving](#线上serving)
 - [评价指标](#评价指标)
@@ -38,7 +42,7 @@
 		- [PNN (Product-based Neural Networks)](#pnn-product-based-neural-networks)
 		- [DeepFM](#deepfm-1)
 		- [FTRL](#ftrl)
-		- [DIN](#din-1)
+		- [DIN](#din)
 		- [评价指标](#评价指标-1)
 			- [AUC](#auc-1)
 		- [RMSE](#rmse)
@@ -46,17 +50,44 @@
 		- [总结](#总结)
 		- [新广告：lookalike、相关广告信息挖掘](#新广告lookalike相关广告信息挖掘)
 		- [Rare Event：贝叶斯平滑、指数平滑](#rare-event贝叶斯平滑指数平滑)
+- [参考](#参考)
 
 
 
 
 # 主流CTR模型演化
 
-CTR预估本质是一个二分类问题，以移动端展示广告推荐为例，依据日志中的用户侧的信息（比如年龄，性别，国籍，手机上安装的app列表）、广告侧的信息（广告id，广告类别，广告标题等）、上下文侧信息（渠道id等），去建模预测用户是否会点击该广告。
+CTR预估本质是一个二分类问题，以移动端展示广告推荐为例，依据日志中的用户侧的信息（比如年龄，性别，国籍，手机上安装的app列表）、广告侧的信息（广告id，广告类别，广告标题等）、上下文侧信息（渠道id等），去建模预测用户是否会点击该广告。在CPC（cost-per-click）的广告系统中，广告是通过eCPM（effective cost per mille）来排序的，而eCPM是竞价（bid price）和CTR（click-through rate）的乘积。
 
 ![architect](http://aistar.site/image001.png)
 
 ![algorithms](../image/algorithms.jpg)
+
+| Model | Paper | 
+| ---- | ---- |
+|  Convolutional Click Prediction Model  | [CIKM 2015][A Convolutional Click Prediction Model](http://ir.ia.ac.cn/bitstream/173211/12337/1/A%20Convolutional%20Click%20Prediction%20Model.pdf)             |
+| Factorization-supported Neural Network | [ECIR 2016][Deep Learning over Multi-field Categorical Data: A Case Study on User Response Prediction](https://arxiv.org/pdf/1601.02376.pdf)                    |
+|      Product-based Neural Network      | [ICDM 2016][Product-based neural networks for user response prediction](https://arxiv.org/pdf/1611.00144.pdf)                                                   |
+|              Wide & Deep               | [DLRS 2016][Wide & Deep Learning for Recommender Systems](https://arxiv.org/pdf/1606.07792.pdf)                                                                 |
+|                 DeepFM                 | [IJCAI 2017][DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](http://www.ijcai.org/proceedings/2017/0239.pdf)                           |
+|        Piece-wise Linear Model         | [arxiv 2017][Learning Piece-wise Linear Models from Large Scale Data for Ad Click Prediction](https://arxiv.org/abs/1704.05194)                                 |
+|          Deep & Cross Network          | [ADKDD 2017][Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123)                                                                   |
+|   Attentional Factorization Machine    | [IJCAI 2017][Attentional Factorization Machines: Learning the Weight of Feature Interactions via Attention Networks](http://www.ijcai.org/proceedings/2017/435) |
+|      Neural Factorization Machine      | [SIGIR 2017][Neural Factorization Machines for Sparse Predictive Analytics](https://arxiv.org/pdf/1708.05027.pdf)                                               |
+|                xDeepFM                 | [KDD 2018][xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems](https://arxiv.org/pdf/1803.05170.pdf)                         |
+|         Deep Interest Network          | [KDD 2018][Deep Interest Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1706.06978.pdf)                                                       |
+|    Deep Interest Evolution Network     | [AAAI 2019][Deep Interest Evolution Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1809.03672.pdf)                                            |
+|                AutoInt                 | [CIKM 2019][AutoInt: Automatic Feature Interaction Learning via Self-Attentive Neural Networks](https://arxiv.org/abs/1810.11921)                              |
+|                  ONN                   | [arxiv 2019][Operation-aware Neural Networks for User Response Prediction](https://arxiv.org/pdf/1904.12579.pdf)                                                |
+|                FiBiNET                 | [RecSys 2019][FiBiNET: Combining Feature Importance and Bilinear feature Interaction for Click-Through Rate Prediction](https://arxiv.org/pdf/1905.09433.pdf)   |
+|                  IFM                   | [IJCAI 2019][An Input-aware Factorization Machine for Sparse Prediction](https://www.ijcai.org/Proceedings/2019/0203.pdf)   |
+|                  DCN V2                | [arxiv 2020][DCN V2: Improved Deep & Cross Network and Practical Lessons for Web-scale Learning to Rank Systems](https://arxiv.org/abs/2008.13535)   |
+|                  DIFM                  | [IJCAI 2020][A Dual Input-aware Factorization Machine for CTR Prediction](https://www.ijcai.org/Proceedings/2020/0434.pdf)   |
+|                  AFN                   | [AAAI 2020][Adaptive Factorization Network: Learning Adaptive-Order Feature Interactions](https://arxiv.org/pdf/1909.03276)   |
+|               SharedBottom             | [arxiv 2017][An Overview of Multi-Task Learning in Deep Neural Networks](https://arxiv.org/pdf/1706.05098.pdf)  |
+|                  ESMM                  | [SIGIR 2018][Entire Space Multi-Task Model: An Effective Approach for Estimating Post-Click Conversion Rate](https://dl.acm.org/doi/10.1145/3209978.3210104)                       |
+|                  MMOE                  | [KDD 2018][Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts](https://dl.acm.org/doi/abs/10.1145/3219819.3220007)                   |
+|                  PLE                   | [RecSys 2020][Progressive Layered Extraction (PLE): A Novel Multi-Task Learning (MTL) Model for Personalized Recommendations](https://dl.acm.org/doi/10.1145/3383313.3412236)                   |
 
 
 
@@ -75,14 +106,13 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
   - 将特征交互模块输出的标量用sigmoid函数映射到[0, 1]，即表示CTR。
 
 
-## 主流算法
 
-### Logistic Regression
+## Logistic Regression
 
 LR一直是CTR预估的benchmark模型，具有简单、易于并行化实现、可解释性强等优点，但是LR模型中的特征是默认相互独立的，遇到具有交叉可能性的特征需进行大量的人工特征工程进行交叉(连续特征的离散化、特征交叉)，不能处理目标和特征之间的非线性关系。LR将特征加权求和并经sigmoid即得到CTR值。
 
 
-### LR + GBDT
+## LR + GBDT
 
 GBDT(Gradient Boost Decision Tree)是用来解决LR模型的特征组合问题。GBDT可以用来学习高阶非线性特征组合。对应树的一条路径。通常将一些连续值特征、值空间不大的categorical特征都丢给GBDT模型；空间很大的ID特征留在LR模型中训练，既能做高阶特征组合又可以利用线性模型易于处理大规模稀疏数据的优势。
 
@@ -92,13 +122,28 @@ GBDT优势在于处理连续值特征，如用户历史点击率、用户历史�
 
 但是大多数推荐系统中出现的是大规模的离散化特征，使用GBDT需要首先统计成连续值特征(embedding)，需要耗费时间，GBDT具有记忆性强的特点，不利于挖掘长尾特征。而且GBDT虽然具有一定组合特征能力，但是组合的能力十分有限，远不能与DNN相比。
 
-### Deep Interest Network (DIN), 2017
+## Deep Neural Networks for Youtube Recommendation (Covington, et al., 2016)
+
+## Wide & Deep (Cheng, Heng-Tze, et al., 2016)
+
+
+## Deep Interest Network (Zhou, Guorui, et al., 2018)
+
+### 主要贡献点
+
+- `Local Activation Unit`: 设计了一个local activation unit来学习用户兴趣的表征，对于不同的商品来说，这个用户表征是不一样的。
+- `Mini-batch aware regularization`：
+- `Data Adaptive Activation Function`：
+
+### 背景
 
 在电商场景下，CTR预估面临的问题是，用户的兴趣多种多样，存在于浏览、点击、加购物车、购买等等各类行为中，我们怎么样根据繁多的用户行为序列去预估当前的点击概率。[深度兴趣网络DIN](../papers/deep_interest_network.pdf)引入注意力（attention）机制，在预测时，对用户不同行为的注意力不一样。
 
 在此之前，通常会一碗水端平地考虑所有行为的影响，对应到模型中，就是我们会用一个average pooling层把用户交互过的所有商品的embedding平均一下形成这个用户的user vector。顶多，考虑用户行为历史的发生时间，引入time decay，让最近的行为产生的影响大一下，也就是在做average pooling的时候按时间调整一下权重。
 
 但是，在不同的时刻，不同的场景下，用户当下的关注点不总是和所有的用户历史行为相关，比如情人节快到了，用户可能就突然开始对巧克力、鲜花等商品感兴趣。**注意力机制，就是模型在预测的时候，对用户不同行为的注意力是不一样的**。
+
+### 模型
 
 $V_u=f(V_a)=\sum_{i=1}^N w_i V_i=\sum_{i=1}^N g(V_i,V_a) V_i$
 
@@ -108,24 +153,17 @@ $V_u=f(V_a)=\sum_{i=1}^N w_i V_i=\sum_{i=1}^N g(V_i,V_a) V_i$
 
 相比原来的Base Model，DIN在生成用户embedding的时候加入了一个activation unit层，这一层产生了每个用户行为$V_i$的权重。下面我们仔细看一下这个权重是怎么生成的，也就是$g(V_i,V_a)$是如何定义的。
 
-传统的Attention机制中，给定两个item embedding，比如$u$和$v$，通常是直接做点积$uv$或者$uWv$，其中$W$是一个$|u|\times|v|$的权重矩阵。
+### 代码实现
 
+## FM/FFM
 
-- 贡献点
-  - 用GAUC代替AUC
-  - 用Dice方法代替经典的PReLU激活函数
-  - 介绍一种Adaptive的正则化方法
-
-
-### FM/FFM
-
-#### FM
+### FM
 
 与LR相比，FM增加了二阶项的信息，通过穷举所有的二阶特征（一阶特征两两组合）并结合特征的有效性（特征权重）来预测点击结果，FM的二阶特征组合过程可拆分成Embedding和内积两个步骤。GBDT虽然可以学习特征交叉组合，但是只适合中低度稀疏数据，容易学到高阶组合。但是对于高度稀疏数据的特征组合，学习效率很低。另外GBDT也不能学习到训练数据中很少或者没有出现的特征组合。但是FM（因子分解机，Factorization Machine）可以通过隐向量的内积提取特征组合，对于很少或没出现的特征组合也可以学习到。
 
 FM的优点就是具有处理二次交叉特征的能力，而且可以实现线性复杂度O(n)，模型训练速度快。
 
-#### FFM (Field-aware Factorization Machine)
+### FFM (Field-aware Factorization Machine)
 
 FFM引入了field概念，FFM将相同性质的特种归于同一个field。同一个categorical特种经过one-hot编码生成的数值特种都可以放入同一个field。
 
@@ -147,11 +185,11 @@ FM是把所有特征都归属于一个field时的FFM模型。
 
 - **省略零值特征**。从FFM模型的表达式可以看出，零值特征对模型完全没有贡献。包含零值特征的一次项和组合项均为零，对于训练模型参数或者目标值预估是没有作用的。因此，可以省去零值特征，提高FFM模型训练和预测的速度，这也是稀疏样本采用FFM的显著优势。
 
-### GBDT+(LR,FM,FFM)
+## GBDT+(LR,FM,FFM)
 
 GBDT适合处理连续值特征，而LR、FM、FFM更加适合处理离散化特征。GBDT可以做到一定程度的特征组合，而GBDT的特征组合是多次组合而不仅是与FM和FFM这样的二阶组合而已。GBDT具备一定的特征选择能力（选择最优的特征进行分裂）。
 
-### DNN
+## DNN
 
 在ctr预估场景中，绝大多数特征都是大规模离散化特征，并且交叉类的特征十分重要，如果利用简单的模型如LR的话需要大量的特征工程，即使是GBDT，FM这种具有一定交叉特征能力的模型，交叉能力十分有限，脱离不了特征工程。
 
@@ -160,19 +198,19 @@ DNN具有很强的模型表达能力，有以下优势：
 - 模型表达能力强，能够学习出高阶非线性特征。
 - 容易扩充其他类别的特征，如特征是图片或文字类时。
 
-### Embedding+MLP
+## Embedding+MLP
 
 多层感知机MLP因具有学习高阶特征的能力常常被用在各种深度CTR模型中。MLP主要由若干个全连接层和激活层组成。
 
-### Wide&Deep
+## Wide&Deep
 
 将LR和MLP并联即可得到Wide&Deep模型，可同时学习一阶特征和高阶特征。
 
-### DeepFM 
+## DeepFM 
 
 DeepFM是为了解决DNN的不足而推出的一种并行结构模型。将LR、MLP和Quadratic Layer并联可得到DeepFM，注意到MLP和Quadratic Layer共享Group Embedding。DeepFM是目前效率和效果上都表现不错的一个模型。
 
-### DCN: Deep & Cross Network
+## DCN: Deep & Cross Network
 
 将LR、MLP和Cross Net并联可得到DCN。
 
@@ -180,7 +218,7 @@ Cross Net是一个堆叠型网络，该部分的初始输入是将f个(1,k)的�
 
 每层计算过程如下：输入向量和初始输入向量做Cartesian product得到(f\*k,f\*k)的矩阵，再重新投影成(1,k)向量，每一层输出都包含输入向量。
 
-### xDeepFM
+## xDeepFM
 
 将LR、MLP和CIN并联可得到xDeepFM。
 
@@ -190,14 +228,10 @@ CIN也是一个堆叠型网络，该部分的初始输入是一个(f,k)的矩阵
 
 CIN的最后一层：将CIN中间层的输出矩阵沿嵌入维度方向做sum pooling得到(H1,1),(H2,1)...(Hl,1)的向量，再将这些向量concat起来作为CIN网络的输出。
 
-### DIN
 
-该模型基于对用户历史行为数据的两个观察：1、多样性，一个用户可能对多种品类的东西感兴趣；2、部分对应，只有一部分的历史数据对目前的点击预测有帮助，比如系统向用户推荐泳镜时会与用户点击过的泳衣产生关联，但是跟用户买的书就关系不大。于是，DIN设计了一个attention结构，对用户的历史数据和待估算的广告之间部分匹配，从而得到一个权重值，用来进行embedding间的加权求和。
+# 代码实现 
 
-
-## 代码实现 
-
-### LR实现
+## LR实现
 
 SGD classifier分类器
 
@@ -500,3 +534,6 @@ Netflix 比赛用的 RMSE 指标可以衡量预测的精度，与之类似的指
 
 想法的初衷是我们经常需要使用一些点击率特征，比如曝光两次点击一次我们可以得出 0.5 点击率，另一个广告是曝光一万次，点击五千次，也可以得到 0.5 的点击率，但是这两个 0.5 代表的意义能一样吗？前者随着曝光的增加，有可能会快速下滑，为了解决经验频率和概率之间的这种差异，我们引入平滑的技巧。
 
+# 参考 
+
+- [DeepCTR Torch](https://github.com/shenweichen/DeepCTR-Torch/tree/master)
