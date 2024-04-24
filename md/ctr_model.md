@@ -2,14 +2,8 @@
 	- [深度CTR模型的基本框架](#深度ctr模型的基本框架)
 	- [Logistic Regression](#logistic-regression)
 	- [LR + GBDT](#lr--gbdt)
-	- [Deep Neural Networks for Youtube Recommendation](#deep-neural-networks-for-youtube-recommendation)
 	- [Wide \& Deep](#wide--deep)
 	- [Deep Interest Network](#deep-interest-network)
-		- [主要贡献点](#主要贡献点)
-		- [背景](#背景)
-		- [模型](#模型)
-		- [实验结果](#实验结果)
-		- [代码实现](#代码实现)
 	- [FM/FFM](#fmffm)
 		- [FM](#fm)
 		- [FFM (Field-aware Factorization Machine)](#ffm-field-aware-factorization-machine)
@@ -20,7 +14,7 @@
 	- [DeepFM](#deepfm)
 	- [DCN: Deep \& Cross Network](#dcn-deep--cross-network)
 	- [xDeepFM](#xdeepfm)
-- [代码实现](#代码实现-1)
+- [代码实现](#代码实现)
 	- [LR实现](#lr实现)
 - [工程问题](#工程问题)
 	- [线上serving](#线上serving)
@@ -69,7 +63,7 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
 | Convolutional Click Prediction Model  | [CIKM 2015][A Convolutional Click Prediction Model](http://ir.ia.ac.cn/bitstream/173211/12337/1/A%20Convolutional%20Click%20Prediction%20Model.pdf)   | |
 | Factorization-supported Neural Network | [ECIR 2016][Deep Learning over Multi-field Categorical Data: A Case Study on User Response Prediction](https://arxiv.org/pdf/1601.02376.pdf)    |     |
 | Product-based Neural Network  | [ICDM 2016][Product-based neural networks for user response prediction](https://arxiv.org/pdf/1611.00144.pdf)  |   |
-| Wide & Deep | [DLRS 2016][Wide & Deep Learning for Recommender Systems](https://arxiv.org/pdf/1606.07792.pdf)    |   [[Wide&Deep]](#wide--deep)     |
+| Wide & Deep | [DLRS 2016][Wide & Deep Learning for Recommender Systems](https://arxiv.org/pdf/1606.07792.pdf)    |   [[Wide&Deep]](#wide--deep) <br> 同时具备Wide模型的记忆性和Deep模型的泛化性  |
 |  DeepFM  | [IJCAI 2017][DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](http://www.ijcai.org/proceedings/2017/0239.pdf)  | |
 |  Piece-wise Linear Model   | [arxiv 2017][Learning Piece-wise Linear Models from Large Scale Data for Ad Click Prediction](https://arxiv.org/abs/1704.05194)  | |
 |  Deep & Cross Network  | [ADKDD 2017][Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123)  |      |
@@ -124,42 +118,52 @@ GBDT优势在于处理连续值特征，如用户历史点击率、用户历史�
 
 但是大多数推荐系统中出现的是大规模的离散化特征，使用GBDT需要首先统计成连续值特征(embedding)，需要耗费时间，GBDT具有记忆性强的特点，不利于挖掘长尾特征。而且GBDT虽然具有一定组合特征能力，但是组合的能力十分有限，远不能与DNN相比。
 
-## Deep Neural Networks for Youtube Recommendation 
-
 ## Wide & Deep 
 
+Wide & Deep模型结合Wide线性模型的记忆性（Memorization）和Deep模型的泛化性（Generalization），比单纯的wide模型或者单纯的deep模型都效果更好。
+
+- **Wide模型**
+  - Wide部分就是一个线性模型$y=w^{\intercal}x+b$，其中，$x=[x_1,x_2,...,x_d]$是一组维度为$d$的特征，特征集合包含原始的输入特征，以及变换后的特征。最重要的特征变换之一是交叉乘积变换（`cross-product transformation`）。
+    - $\phi_k(x)=\prod_{i=1}^d x_i^{c^{ki}}$, $c_{ki} \in {0, 1}$
+    - 这类变换建模了二分特征之间的关系，同时也给线性模型增加了非线性。
+- **Deep模型**
+  - Deep部分是一个前馈神经网络（feed-forward neural network）。对于高维稀疏的类别特征（categorical features），它们会首先被转换成低维稠密的实值矩阵（real-valued vector），也就是embedding。通常，这类embedding的维度是$O(10)$到$O(100)$。embedding随机初始化以后，随着模型一起训练。然后，这低维稠密的embedding被送入隐层
+    - $a^{(l+1)}=f(W^{(l)}a^{(l)}+b^{(l)})$
+- **Wide & Deep联合训练**
+  - Wide和deep部分的输出通过一个weighted sum来合并，然后送入一个logistic loss function。
+  - 在实验时，对于wide部分，采用带有L1正则化的FTRL（Follow-the-regularized-leader）来作为优化器，对于deep部分，采用Adagrad作为优化器。
+  - 对于logistic regression，模型的预测为：
+    - $P(Y=1|x)=\sigma(w_{wide}^{\intercal}[x,\phi(x)]+w_{deep}^{\intercal}a^{(l_f)}+b)$
+    - Y是二分类label，$\sigma(\cdot)$是sigmoid函数，$\phi(x)$是原始特征$x$的交叉乘积变换，$b$是bias，$w_{wide}$是wide模型的权重，$w_{deep}$是应用到最终的激活函数$a^{l_f}$的权重。
+- **系统实现**
+  - 流程可以分为三个阶段：数据生成（data generation），模型训练（model training）和模型服务（model serving）。
+    - 数据生成（Data Generation）
+    - 模型训练（Model Training）
+      - 在deep部分，每个类别特征都用一个32维的embedding来表示，拼接所有的embeddings以后，会生成一个约1200维的embedding。然后，拼接的矩阵然后被送入3个ReLU层，最后是logistic输出层。
+      - 在5000亿的样本上进行训练
+      - 在把训练好的模型推上server之前，需要检查它不会出问题。
+    - 模型服务（Model Serving）
+      - 为了让每个request都能在10ms内完成，采用multithreading并行化，并行地跑小批量batches。
+- **实验结果**
+
+![architecture](../image/wide_deep_architecture.png)
 
 ## Deep Interest Network
 
-### 主要贡献点
-
-- `Local Activation Unit`: 设计了一个local activation unit来学习用户兴趣的表征，对于不同的商品来说，这个用户表征是不一样的。
-- `Mini-batch aware regularization`：
-- `Data Adaptive Activation Function`：
-
-### 背景
-
-在电商场景下，CTR预估面临的问题是，用户的兴趣多种多样，存在于浏览、点击、加购物车、购买等等各类行为中，我们怎么样根据繁多的用户行为序列去预估当前的点击概率。[深度兴趣网络DIN](../papers/deep_interest_network.pdf)引入注意力（attention）机制，在预测时，对用户不同行为的注意力不一样。
-
-在此之前，通常会一碗水端平地考虑所有行为的影响，对应到模型中，就是我们会用一个average pooling层把用户交互过的所有商品的embedding平均一下形成这个用户的user vector。顶多，考虑用户行为历史的发生时间，引入time decay，让最近的行为产生的影响大一下，也就是在做average pooling的时候按时间调整一下权重。
-
-但是，在不同的时刻，不同的场景下，用户当下的关注点不总是和所有的用户历史行为相关，比如情人节快到了，用户可能就突然开始对巧克力、鲜花等商品感兴趣。**注意力机制，就是模型在预测的时候，对用户不同行为的注意力是不一样的**。
-
-### 模型
-
-$V_u=f(V_a)=\sum_{i=1}^N w_i V_i=\sum_{i=1}^N g(V_i,V_a) V_i$
-
-上式中，$V_u$是用户的embedding向量，$V_a$是候选商品的embedding向量，$V_i$是用户$u$的第$i$次行为的embedding向量，比如用户浏览商品或店铺的embedding向量。因为加入了注意力机制，$V_u$从$V_i$的加和变成了$V_i$的加权和，$V_i$的权重$w_i$就由$V_i$与$V_a$的关系决定，也就是上式中的$g(V_i,V_a)$。
+- **主要贡献点**
+  - `Local Activation Unit`: 设计了一个local activation unit来学习用户兴趣的表征，对于不同的商品来说，这个用户表征是不一样的。
+  - `Mini-batch aware regularization`
+  - `Data Adaptive Activation Function`：
+- 背景
+  - 在电商场景下，CTR预估面临的问题是，用户的兴趣多种多样，存在于浏览、点击、加购物车、购买等等各类行为中，我们怎么样根据繁多的用户行为序列去预估当前的点击概率。[深度兴趣网络DIN](../papers/deep_interest_network.pdf)引入注意力（attention）机制，在预测时，对用户不同行为的注意力不一样。
+  - 在此之前，通常会一碗水端平地考虑所有行为的影响，对应到模型中，就是我们会用一个average pooling层把用户交互过的所有商品的embedding平均一下形成这个用户的user vector。顶多，考虑用户行为历史的发生时间，引入time decay，让最近的行为产生的影响大一下，也就是在做average pooling的时候按时间调整一下权重。
+  - 但是，在不同的时刻，不同的场景下，用户当下的关注点不总是和所有的用户历史行为相关，比如情人节快到了，用户可能就突然开始对巧克力、鲜花等商品感兴趣。**注意力机制，就是模型在预测的时候，对用户不同行为的注意力是不一样的**。
+- 模型
+  - $V_u=f(V_a)=\sum_{i=1}^N w_i V_i=\sum_{i=1}^N g(V_i,V_a) V_i$
+  - 上式中，$V_u$是用户的embedding向量，$V_a$是候选商品的embedding向量，$V_i$是用户$u$的第$i$次行为的embedding向量，比如用户浏览商品或店铺的embedding向量。因为加入了注意力机制，$V_u$从$V_i$的加和变成了$V_i$的加权和，$V_i$的权重$w_i$就由$V_i$与$V_a$的关系决定，也就是上式中的$g(V_i,V_a)$。
+  - 相比原来的Base Model，DIN在生成用户embedding的时候加入了一个activation unit层，这一层产生了每个用户行为$V_i$的权重。下面我们仔细看一下这个权重是怎么生成的，也就是$g(V_i,V_a)$是如何定义的。
 
 ![注意力机制](https://pic4.zhimg.com/v2-b8251f4d2a41f1a7de359c330a355530_1440w.jpg?source=172ae18b)
-
-相比原来的Base Model，DIN在生成用户embedding的时候加入了一个activation unit层，这一层产生了每个用户行为$V_i$的权重。下面我们仔细看一下这个权重是怎么生成的，也就是$g(V_i,V_a)$是如何定义的。
-
-### 实验结果
-
-### 代码实现
-
-
 
 ## FM/FFM
 
