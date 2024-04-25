@@ -3,6 +3,7 @@
 	- [Logistic Regression](#logistic-regression)
 	- [LR + GBDT](#lr--gbdt)
 	- [Wide \& Deep](#wide--deep)
+	- [DeepFM](#deepfm)
 	- [Deep Interest Network](#deep-interest-network)
 	- [FM/FFM](#fmffm)
 		- [FM](#fm)
@@ -11,7 +12,7 @@
 	- [DNN](#dnn)
 	- [Embedding+MLP](#embeddingmlp)
 	- [Wide\&Deep](#widedeep)
-	- [DeepFM](#deepfm)
+	- [DeepFM](#deepfm-1)
 	- [DCN: Deep \& Cross Network](#dcn-deep--cross-network)
 	- [xDeepFM](#xdeepfm)
 - [代码实现](#代码实现)
@@ -35,7 +36,7 @@
 		- [Wide \& Deep Learning (WDL)](#wide--deep-learning-wdl)
 		- [FNN (Factorization-machine supported Neural Network)](#fnn-factorization-machine-supported-neural-network)
 		- [PNN (Product-based Neural Networks)](#pnn-product-based-neural-networks)
-		- [DeepFM](#deepfm-1)
+		- [DeepFM](#deepfm-2)
 		- [FTRL](#ftrl)
 		- [DIN](#din)
 		- [评价指标](#评价指标-1)
@@ -46,7 +47,6 @@
 		- [新广告：lookalike、相关广告信息挖掘](#新广告lookalike相关广告信息挖掘)
 		- [Rare Event：贝叶斯平滑、指数平滑](#rare-event贝叶斯平滑指数平滑)
 - [参考](#参考)
-
 
 
 
@@ -63,8 +63,8 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
 | Convolutional Click Prediction Model  | [CIKM 2015][A Convolutional Click Prediction Model](http://ir.ia.ac.cn/bitstream/173211/12337/1/A%20Convolutional%20Click%20Prediction%20Model.pdf)   | |
 | Factorization-supported Neural Network | [ECIR 2016][Deep Learning over Multi-field Categorical Data: A Case Study on User Response Prediction](https://arxiv.org/pdf/1601.02376.pdf)    |     |
 | Product-based Neural Network  | [ICDM 2016][Product-based neural networks for user response prediction](https://arxiv.org/pdf/1611.00144.pdf)  |   |
-| Wide & Deep | [DLRS 2016][Wide & Deep Learning for Recommender Systems](https://arxiv.org/pdf/1606.07792.pdf)    |   [[Wide&Deep]](#wide--deep) <br> 同时具备Wide模型的记忆性和Deep模型的泛化性  |
-|  DeepFM  | [IJCAI 2017][DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](http://www.ijcai.org/proceedings/2017/0239.pdf)  | |
+| Wide & Deep | [DLRS 2016][Wide & Deep Learning for Recommender Systems](https://arxiv.org/pdf/1606.07792.pdf)    |  1. Wide模型提供记忆能力；<br> 2. Deep模型提供泛化能力；<br> 3. Wide&Deep联合训练 <br>[[Detailed Notes]](#wide--deep)  |
+|  DeepFM  | [IJCAI 2017][DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](http://www.ijcai.org/proceedings/2017/0239.pdf)  | Wide&Deep升级版 <br> 1. 将浅层部分的LR替换为FM；<br> 2. 浅层部分和深层部分共享输入; <br> 3. End-to-End，不需要人工特征工程 <br> [[Detailed Notes]](#deepfm) |
 |  Piece-wise Linear Model   | [arxiv 2017][Learning Piece-wise Linear Models from Large Scale Data for Ad Click Prediction](https://arxiv.org/abs/1704.05194)  | |
 |  Deep & Cross Network  | [ADKDD 2017][Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123)  |      |
 |  Attentional Factorization Machine | [IJCAI 2017][Attentional Factorization Machines: Learning the Weight of Feature Interactions via Attention Networks](http://www.ijcai.org/proceedings/2017/435) | |
@@ -122,11 +122,11 @@ GBDT优势在于处理连续值特征，如用户历史点击率、用户历史�
 
 Wide & Deep模型结合Wide线性模型的记忆性（Memorization）和Deep模型的泛化性（Generalization），比单纯的wide模型或者单纯的deep模型都效果更好。
 
-- **Wide模型**
+- **Wide部分**
   - Wide部分就是一个线性模型$y=w^{\intercal}x+b$，其中，$x=[x_1,x_2,...,x_d]$是一组维度为$d$的特征，特征集合包含原始的输入特征，以及变换后的特征。最重要的特征变换之一是交叉乘积变换（`cross-product transformation`）。
     - $\phi_k(x)=\prod_{i=1}^d x_i^{c^{ki}}$, $c_{ki} \in {0, 1}$
     - 这类变换建模了二分特征之间的关系，同时也给线性模型增加了非线性。
-- **Deep模型**
+- **Deep部分**
   - Deep部分是一个前馈神经网络（feed-forward neural network）。对于高维稀疏的类别特征（categorical features），它们会首先被转换成低维稠密的实值矩阵（real-valued vector），也就是embedding。通常，这类embedding的维度是$O(10)$到$O(100)$。embedding随机初始化以后，随着模型一起训练。然后，这低维稠密的embedding被送入隐层
     - $a^{(l+1)}=f(W^{(l)}a^{(l)}+b^{(l)})$
 - **Wide & Deep联合训练**
@@ -149,6 +149,169 @@ Wide & Deep模型结合Wide线性模型的记忆性（Memorization）和Deep模�
   - 通过多线程并行化和小批量预测，提升客户端延迟到14ms。
 
 ![architecture](../image/wide_deep_architecture.png)
+
+> **代码实现**
+
+```python
+class WDL(BaseModel):
+    """Instantiates the Wide&Deep Learning architecture.
+
+    :param linear_feature_columns: An iterable containing all the features used by linear part of the model.
+    :param dnn_feature_columns: An iterable containing all the features used by deep part of the model.
+    :param dnn_hidden_units: list,list of positive integer or empty list, the layer number and units in each layer of DNN
+    :param l2_reg_linear: float. L2 regularizer strength applied to wide part
+    :param l2_reg_embedding: float. L2 regularizer strength applied to embedding vector
+    :param l2_reg_dnn: float. L2 regularizer strength applied to DNN
+    :param init_std: float,to use as the initialize std of embedding vector
+    :param seed: integer ,to use as random seed.
+    :param dnn_dropout: float in [0,1), the probability we will drop out a given DNN coordinate.
+    :param dnn_activation: Activation function to use in DNN
+    :param task: str, ``"binary"`` for  binary logloss or  ``"regression"`` for regression loss
+    :param device: str, ``"cpu"`` or ``"cuda:0"``
+    :param gpus: list of int or torch.device for multiple gpus. If None, run on `device`. `gpus[0]` should be the same gpu with `device`.
+    :return: A PyTorch model instance.
+
+    """
+
+    def __init__(self,
+                 linear_feature_columns, dnn_feature_columns, dnn_hidden_units=(256, 128),
+                 l2_reg_linear=1e-5,
+                 l2_reg_embedding=1e-5, l2_reg_dnn=0, init_std=0.0001, seed=1024, dnn_dropout=0, dnn_activation='relu',
+                 dnn_use_bn=False,
+                 task='binary', device='cpu', gpus=None):
+
+        super(WDL, self).__init__(linear_feature_columns, dnn_feature_columns, l2_reg_linear=l2_reg_linear,
+                                  l2_reg_embedding=l2_reg_embedding, init_std=init_std, seed=seed, task=task,
+                                  device=device, gpus=gpus)
+
+        self.use_dnn = len(dnn_feature_columns) > 0 and len(dnn_hidden_units) > 0
+        if self.use_dnn:
+            self.dnn = DNN(self.compute_input_dim(dnn_feature_columns), dnn_hidden_units,
+                           activation=dnn_activation, l2_reg=l2_reg_dnn, dropout_rate=dnn_dropout, use_bn=dnn_use_bn,
+                           init_std=init_std, device=device)
+            self.dnn_linear = nn.Linear(dnn_hidden_units[-1], 1, bias=False).to(device)
+            self.add_regularization_weight(
+                filter(lambda x: 'weight' in x[0] and 'bn' not in x[0], self.dnn.named_parameters()), l2=l2_reg_dnn)
+            self.add_regularization_weight(self.dnn_linear.weight, l2=l2_reg_dnn)
+
+        self.to(device)
+
+    def forward(self, X):
+
+        sparse_embedding_list, dense_value_list = self.input_from_feature_columns(X, self.dnn_feature_columns,
+                                                                                  self.embedding_dict)
+        logit = self.linear_model(X)
+
+        if self.use_dnn:
+            dnn_input = combined_dnn_input(sparse_embedding_list, dense_value_list)
+            dnn_output = self.dnn(dnn_input)
+            dnn_logit = self.dnn_linear(dnn_output)
+            logit += dnn_logit
+        
+		y_pred = self.out(logit)
+        return y_pred
+```
+
+## DeepFM
+
+和Wide&Deep模型类似，DeepFM模型同样由浅层模型和深层模型联合训练得到。不同点主要有以下两点：
+
+1. Wide模型部分由LR替换为FM。FM模型具有自动学习交叉特征的能力，避免了原始Wide&Deep模型中浅层部分人工特征工程的工作。
+2. 共享原始输入特征。DeepFM模型的原始特征讲作为FM和Deep模型部分的共同输入，保证模型特征的准确与一致。 
+
+- **特征**
+  - 对于特征$i$，$w_i$标量表示一阶重要性（order-1 importance），一个隐矩阵$V_i$用来衡量与其他特征的相关性（高阶）
+- **输出**
+  - $\hat{y}=sigmoid(y_{FM}+y_{DNN})$
+- **FM部分**
+  - FM部分是一个factorization machine（因子分解机），用于学习特征之间的关系。
+  - FM会通过内积的方式学到二阶关系
+  - FM的输出是Addition Unit和Inner Product Unit的加和
+    - $y_{FM}=\langle w,x\rangle+\sum_{i=1}^d\sum_{j=i+1}^d \langle V_i,V_j\rangle x_i\cdot x_j$
+![fm](../image/deepfm_fm.png)
+- **Deep部分**
+  - Deep部分是一个前馈神经网络（feed-forward neural network），用来建模高阶的特征关系。
+![deep](../image/deepfm_deep.png)
+- **实验结果**
+  - 评价度量（Evaluation Metrics）
+    - AUC
+    - Logloss (cross entropy)
+  - Criteo Dataset
+    - 45 million用户点击记录，13个连续特征，26个类别特征
+  - Company Dataset
+    - 7天用户点击记录用于训练，1天记录用于测试，一共是1 billion数据量
+![deepfm evaluation](../image/deepfm_evaluation.png)
+- **代码实现**
+
+```python
+class DeepFM(BaseModel):
+    """Instantiates the DeepFM Network architecture.
+
+    :param linear_feature_columns: An iterable containing all the features used by linear part of the model.
+    :param dnn_feature_columns: An iterable containing all the features used by deep part of the model.
+    :param use_fm: bool,use FM part or not
+    :param dnn_hidden_units: list,list of positive integer or empty list, the layer number and units in each layer of DNN
+    :param l2_reg_linear: float. L2 regularizer strength applied to linear part
+    :param l2_reg_embedding: float. L2 regularizer strength applied to embedding vector
+    :param l2_reg_dnn: float. L2 regularizer strength applied to DNN
+    :param init_std: float,to use as the initialize std of embedding vector
+    :param seed: integer ,to use as random seed.
+    :param dnn_dropout: float in [0,1), the probability we will drop out a given DNN coordinate.
+    :param dnn_activation: Activation function to use in DNN
+    :param dnn_use_bn: bool. Whether use BatchNormalization before activation or not in DNN
+    :param task: str, ``"binary"`` for  binary logloss or  ``"regression"`` for regression loss
+    :param device: str, ``"cpu"`` or ``"cuda:0"``
+    :param gpus: list of int or torch.device for multiple gpus. If None, run on `device`. `gpus[0]` should be the same gpu with `device`.
+    :return: A PyTorch model instance.
+    """
+    def __init__(self,
+                 linear_feature_columns, dnn_feature_columns, use_fm=True,
+                 dnn_hidden_units=(256, 128),
+                 l2_reg_linear=0.00001, l2_reg_embedding=0.00001, l2_reg_dnn=0, init_std=0.0001, seed=1024,
+                 dnn_dropout=0,
+                 dnn_activation='relu', dnn_use_bn=False, task='binary', device='cpu', gpus=None):
+
+        super(DeepFM, self).__init__(linear_feature_columns, dnn_feature_columns, l2_reg_linear=l2_reg_linear,
+                                     l2_reg_embedding=l2_reg_embedding, init_std=init_std, seed=seed, task=task,
+                                     device=device, gpus=gpus)
+
+        self.use_fm = use_fm
+        self.use_dnn = len(dnn_feature_columns) > 0 and len(
+            dnn_hidden_units) > 0
+        if use_fm:
+            self.fm = FM()
+
+        if self.use_dnn:
+            self.dnn = DNN(self.compute_input_dim(dnn_feature_columns), dnn_hidden_units,
+                           activation=dnn_activation, l2_reg=l2_reg_dnn, dropout_rate=dnn_dropout, use_bn=dnn_use_bn,
+                           init_std=init_std, device=device)
+            self.dnn_linear = nn.Linear(
+                dnn_hidden_units[-1], 1, bias=False).to(device)
+
+            self.add_regularization_weight(
+                filter(lambda x: 'weight' in x[0] and 'bn' not in x[0], self.dnn.named_parameters()), l2=l2_reg_dnn)
+            self.add_regularization_weight(self.dnn_linear.weight, l2=l2_reg_dnn)
+        self.to(device)
+
+    def forward(self, X):
+        sparse_embedding_list, dense_value_list = self.input_from_feature_columns(X, self.dnn_feature_columns,
+                                                                                  self.embedding_dict)
+        logit = self.linear_model(X)
+
+        if self.use_fm and len(sparse_embedding_list) > 0:
+            fm_input = torch.cat(sparse_embedding_list, dim=1)
+            logit += self.fm(fm_input)
+
+        if self.use_dnn:
+            dnn_input = combined_dnn_input(
+                sparse_embedding_list, dense_value_list)
+            dnn_output = self.dnn(dnn_input)
+            dnn_logit = self.dnn_linear(dnn_output)
+            logit += dnn_logit
+
+        y_pred = self.out(logit)
+        return y_pred
+```
 
 ## Deep Interest Network
 
