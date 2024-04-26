@@ -4,6 +4,7 @@
 	- [LR + GBDT](#lr--gbdt)
 	- [Wide \& Deep](#wide--deep)
 	- [DeepFM](#deepfm)
+	- [Deep \& Cross Network (DCN)](#deep--cross-network-dcn)
 	- [Deep Interest Network](#deep-interest-network)
 	- [FM/FFM](#fmffm)
 		- [FM](#fm)
@@ -66,7 +67,7 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
 | Wide & Deep | [DLRS 2016][Wide & Deep Learning for Recommender Systems](https://arxiv.org/pdf/1606.07792.pdf)    |  1. Wide模型提供记忆能力；<br> 2. Deep模型提供泛化能力；<br> 3. Wide&Deep联合训练 <br>[[Detailed Notes]](#wide--deep)  |
 |  DeepFM  | [IJCAI 2017][DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](http://www.ijcai.org/proceedings/2017/0239.pdf)  | Wide&Deep升级版 <br> 1. 将浅层部分的LR替换为FM；<br> 2. 浅层部分和深层部分共享输入; <br> 3. End-to-End，不需要人工特征工程 <br> [[Detailed Notes]](#deepfm) |
 |  Piece-wise Linear Model   | [arxiv 2017][Learning Piece-wise Linear Models from Large Scale Data for Ad Click Prediction](https://arxiv.org/abs/1704.05194)  | |
-|  Deep & Cross Network  | [ADKDD 2017][Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123)  |      |
+|  Deep & Cross Network  | [ADKDD 2017][Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123)  |  Wide&Deep的进化版 <br> 1. 将Wide部分替换为Cross，自动构造高阶交叉特制   |
 |  Attentional Factorization Machine | [IJCAI 2017][Attentional Factorization Machines: Learning the Weight of Feature Interactions via Attention Networks](http://www.ijcai.org/proceedings/2017/435) | |
 |  Neural Factorization Machine  | [SIGIR 2017][Neural Factorization Machines for Sparse Predictive Analytics](https://arxiv.org/pdf/1708.05027.pdf)  | |
 |  xDeepFM | [KDD 2018][xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems](https://arxiv.org/pdf/1803.05170.pdf)  | |
@@ -312,6 +313,12 @@ class DeepFM(BaseModel):
         y_pred = self.out(logit)
         return y_pred
 ```
+
+## Deep & Cross Network (DCN)
+
+
+
+
 
 ## Deep Interest Network
 
