@@ -59,31 +59,31 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
 
 ![algorithms](../image/algorithms.jpg)
 
-| Model | Paper | Key Takeaways |  
-| ---- | ---- | ---- |
-| Convolutional Click Prediction Model  | [CIKM 2015][A Convolutional Click Prediction Model](http://ir.ia.ac.cn/bitstream/173211/12337/1/A%20Convolutional%20Click%20Prediction%20Model.pdf)   | |
-| Factorization-supported Neural Network | [ECIR 2016][Deep Learning over Multi-field Categorical Data: A Case Study on User Response Prediction](https://arxiv.org/pdf/1601.02376.pdf)    |     |
-| Product-based Neural Network  | [ICDM 2016][Product-based neural networks for user response prediction](https://arxiv.org/pdf/1611.00144.pdf)  |   |
-| Wide & Deep | [DLRS 2016][Wide & Deep Learning for Recommender Systems](https://arxiv.org/pdf/1606.07792.pdf)    |  1. Wide模型提供记忆能力；<br> 2. Deep模型提供泛化能力；<br> 3. Wide&Deep联合训练 <br>[[Detailed Notes]](#wide--deep)  |
-|  DeepFM  | [IJCAI 2017][DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](http://www.ijcai.org/proceedings/2017/0239.pdf)  | `Wide&Deep升级版` <br> 1. 将浅层部分的LR替换为FM；<br> 2. 浅层部分和深层部分共享输入; <br> 3. End-to-End，不需要人工特征工程 <br> [[Detailed Notes]](#deepfm) |
-|  Piece-wise Linear Model   | [arxiv 2017][Learning Piece-wise Linear Models from Large Scale Data for Ad Click Prediction](https://arxiv.org/abs/1704.05194)  | |
-|  Deep & Cross Network  | [ADKDD 2017][Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123)  |  `Wide&Deep的进化版` <br> 1. 将Wide部分替换为Cross，自动构造高阶交叉特征   |
-|  Attentional Factorization Machine | [IJCAI 2017][Attentional Factorization Machines: Learning the Weight of Feature Interactions via Attention Networks](http://www.ijcai.org/proceedings/2017/435) | |
-|  Neural Factorization Machine  | [SIGIR 2017][Neural Factorization Machines for Sparse Predictive Analytics](https://arxiv.org/pdf/1708.05027.pdf)  | |
-|  xDeepFM | [KDD 2018][xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems](https://arxiv.org/pdf/1803.05170.pdf)  | |
-|  Deep Interest Network  | [KDD 2018][Deep Interest Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1706.06978.pdf)  | [[DIN]](#deep-interest-network)  |
-|  Deep Interest Evolution Network | [AAAI 2019][Deep Interest Evolution Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1809.03672.pdf) | |
-|  AutoInt | [CIKM 2019][AutoInt: Automatic Feature Interaction Learning via Self-Attentive Neural Networks](https://arxiv.org/abs/1810.11921)  | |
-|  ONN   | [arxiv 2019][Operation-aware Neural Networks for User Response Prediction](https://arxiv.org/pdf/1904.12579.pdf)  |  |
-|  FiBiNET  | [RecSys 2019][FiBiNET: Combining Feature Importance and Bilinear feature Interaction for Click-Through Rate Prediction](https://arxiv.org/pdf/1905.09433.pdf)   | |
-|  IFM  | [IJCAI 2019][An Input-aware Factorization Machine for Sparse Prediction](https://www.ijcai.org/Proceedings/2019/0203.pdf) |  |
-|  DCN V2 | [arxiv 2020][DCN V2: Improved Deep & Cross Network and Practical Lessons for Web-scale Learning to Rank Systems](https://arxiv.org/abs/2008.13535)   | |
-|  DIFM  | [IJCAI 2020][A Dual Input-aware Factorization Machine for CTR Prediction](https://www.ijcai.org/Proceedings/2020/0434.pdf) |  |
-|  AFN  | [AAAI 2020][Adaptive Factorization Network: Learning Adaptive-Order Feature Interactions](https://arxiv.org/pdf/1909.03276)   | |
-|  SharedBottom  | [arxiv 2017][An Overview of Multi-Task Learning in Deep Neural Networks](https://arxiv.org/pdf/1706.05098.pdf)  | |
-|  ESMM | [SIGIR 2018][Entire Space Multi-Task Model: An Effective Approach for Estimating Post-Click Conversion Rate](https://dl.acm.org/doi/10.1145/3209978.3210104)   |   |
-|  MMOE | [KDD 2018][Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts](https://dl.acm.org/doi/abs/10.1145/3219819.3220007)  |   |
-| PLE  | [RecSys 2020][Progressive Layered Extraction (PLE): A Novel Multi-Task Learning (MTL) Model for Personalized Recommendations](https://dl.acm.org/doi/10.1145/3383313.3412236)   |    |
+| Model | Paper | Affiliation | Key Takeaways |  
+| ---- | ---- | ---- | ---- |
+| Convolutional Click Prediction Model  | [CIKM 2015][A Convolutional Click Prediction Model](http://ir.ia.ac.cn/bitstream/173211/12337/1/A%20Convolutional%20Click%20Prediction%20Model.pdf)   | | |
+| Factorization-supported Neural Network | [ECIR 2016][Deep Learning over Multi-field Categorical Data: A Case Study on User Response Prediction](https://arxiv.org/pdf/1601.02376.pdf) |   |     |
+| Product-based Neural Network  | [ICDM 2016][Product-based neural networks for user response prediction](https://arxiv.org/pdf/1611.00144.pdf)  |  | |
+| Wide & Deep | [DLRS 2016][Wide & Deep Learning for Recommender Systems](https://arxiv.org/pdf/1606.07792.pdf)  | Google  |  1. Wide模型提供记忆能力；<br> 2. Deep模型提供泛化能力；<br> 3. Wide&Deep联合训练 <br>[[Detailed Notes]](#wide--deep)  |
+|  DeepFM  | [IJCAI 2017][DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](http://www.ijcai.org/proceedings/2017/0239.pdf) | Huawei | `Wide&Deep升级版` <br> 1. 将浅层部分的LR替换为FM；<br> 2. 浅层部分和深层部分共享输入; <br> 3. End-to-End，不需要人工特征工程 <br> [[Detailed Notes]](#deepfm) |
+|  Piece-wise Linear Model   | [arxiv 2017][Learning Piece-wise Linear Models from Large Scale Data for Ad Click Prediction](https://arxiv.org/abs/1704.05194)  | | |
+|  Deep & Cross Network  | [ADKDD 2017][Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123) | Google |  `Wide&Deep的进化版` <br> 1. 将Wide部分替换为Cross，自动构造高阶交叉特征   |
+|  Attentional Factorization Machine | [IJCAI 2017][Attentional Factorization Machines: Learning the Weight of Feature Interactions via Attention Networks](http://www.ijcai.org/proceedings/2017/435) | | |
+|  Neural Factorization Machine  | [SIGIR 2017][Neural Factorization Machines for Sparse Predictive Analytics](https://arxiv.org/pdf/1708.05027.pdf)  | | |
+|  xDeepFM | [KDD 2018][xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems](https://arxiv.org/pdf/1803.05170.pdf)  | | |
+|  Deep Interest Network  | [KDD 2018][Deep Interest Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1706.06978.pdf) | Alibaba | [[DIN]](#deep-interest-network)  | 
+|  Deep Interest Evolution Network | [AAAI 2019][Deep Interest Evolution Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1809.03672.pdf) | | |
+|  AutoInt | [CIKM 2019][AutoInt: Automatic Feature Interaction Learning via Self-Attentive Neural Networks](https://arxiv.org/abs/1810.11921)  | | |
+|  ONN   | [arxiv 2019][Operation-aware Neural Networks for User Response Prediction](https://arxiv.org/pdf/1904.12579.pdf)  |  | |
+|  FiBiNET  | [RecSys 2019][FiBiNET: Combining Feature Importance and Bilinear feature Interaction for Click-Through Rate Prediction](https://arxiv.org/pdf/1905.09433.pdf)  | | |
+|  IFM  | [IJCAI 2019][An Input-aware Factorization Machine for Sparse Prediction](https://www.ijcai.org/Proceedings/2019/0203.pdf) |  | |
+|  DCN V2 | [arxiv 2020][DCN V2: Improved Deep & Cross Network and Practical Lessons for Web-scale Learning to Rank Systems](https://arxiv.org/abs/2008.13535)   | | |
+|  DIFM  | [IJCAI 2020][A Dual Input-aware Factorization Machine for CTR Prediction](https://www.ijcai.org/Proceedings/2020/0434.pdf) |  | |
+|  AFN  | [AAAI 2020][Adaptive Factorization Network: Learning Adaptive-Order Feature Interactions](https://arxiv.org/pdf/1909.03276)   | | |
+|  SharedBottom  | [arxiv 2017][An Overview of Multi-Task Learning in Deep Neural Networks](https://arxiv.org/pdf/1706.05098.pdf)  | | |
+|  ESMM | [SIGIR 2018][Entire Space Multi-Task Model: An Effective Approach for Estimating Post-Click Conversion Rate](https://dl.acm.org/doi/10.1145/3209978.3210104)   |  | |
+|  MMOE | [KDD 2018][Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts](https://dl.acm.org/doi/abs/10.1145/3219819.3220007)  |   | |
+| PLE  | [RecSys 2020][Progressive Layered Extraction (PLE): A Novel Multi-Task Learning (MTL) Model for Personalized Recommendations](https://dl.acm.org/doi/10.1145/3383313.3412236)  |  |    |
 
 
 
@@ -316,9 +316,117 @@ class DeepFM(BaseModel):
 
 ## Deep & Cross Network (DCN)
 
+针对大规模系数特征的点击率预估问题，Google在2016年提出Wide&Deep的结构来同时实现Memorization与Generalization，但是在Wide部分，仍然需要人工地设计特征叉乘，之后的DeepFM中的FM可以自动组合特征，但也仅限于二阶叉乘，Deep&Cross即是更进阶版的尝试，试图自动学习高阶的特征组合。
 
+- **核心贡献点**
+  - 提出了可以在每一层显式构建交叉特征的cross network，而且不需要人工特征工程和穷举搜索
+  - Cross network是memory efficient，而且易于实现
+- **Deep & Cross架构**
+  - Embedding and Stacking Layer
+    - 稀疏特征被映射到稠密特征：$x_{embed,i}=W_{embed,i} x_i$
+    - 最终，和其他的normalized过后的稠密特征一起，组成一个特征：$x_0=[x_{embed,1}^{\intercal},...,x_{embed,k}^{\intercal},x_{dense}^{\intercal}]$
+![deep&cross architecture](../image/deep_cross_architecture.png)
+  - Cross Network & Deep Network
+    - Cross Network
+      - 由多层cross layer组成，每一层：$x_{l+1}=x_0x_l^{\intercal}w_L+b_l+x_l=f(x_l,w_l,b_l)+x_l$
+      - 特征交叉维度取决于层的深度，$l$层的cross network最高阶维度是$l+1$，而整个cross network实际上包含了1到$l+1$的特征交叉维度
+![cross layer](../image/deep_cross_feature_crossing.png)
+      - 复杂度：$d\times L_c \times 2$，其中$L_c$表示cross层的数量，$d$表示输入的维度，因此，cross network的时间和空间复杂度都与输入维度呈线性关系
+    - Deep Network
+      - 全连接前馈神经网络 Fully-connected feed-forward network
+      - 每一层 $h_{l+1}=f(w_lh_l+b_l)$
+      - 复杂度：$d\times m+m+(m^2+m)\times (L_d -1)$，其中，$L_d$是层的数量，$m$是层的size
+  - Combination Layer
+    - 合并层把deep层和cross层的输出拼接起来，送入一个标准的logits layer
+    - $p=\sigma([x_{L_1}^{\intercal},h_{L_2}^{\intercal}]w_{logits})$，其中$\sigma(x)=1/(1+exp(-x))$
+    - 损失函数是logloss
+      - $loss=-\frac{1}{N}\sum_{i=1}^N y_ilog(p_i)+(1-y_i)log(1-p_i)+\lambda\sum_l \|w_l\|^2$
+- **实验结果**
+  - 实验数据：Criteo Display Ads，7天的11GB用户日志，前6天数据作为训练数据，第7天数据平均拆分为validation和test数据
+  - 最佳参数
+    - DCN：2个1024的deep层，6个cross层
+    - DNN（DCN with no cross layer）：5个1024的deep层
+    - DC（Deep Crossing）：输入424，cross537，5个residual units
+    - LR：42个cross特征
+![dcn logloss comparison](../image/dcn_logloss_comparison.png)
 
+```python
+class DCN(BaseModel):
+    """Instantiates the Deep&Cross Network architecture. Including DCN-V (parameterization='vector')
+    and DCN-M (parameterization='matrix').
 
+    :param linear_feature_columns: An iterable containing all the features used by linear part of the model.
+    :param dnn_feature_columns: An iterable containing all the features used by deep part of the model.
+    :param cross_num: positive integet,cross layer number
+    :param cross_parameterization: str, ``"vector"`` or ``"matrix"``, how to parameterize the cross network.
+    :param dnn_hidden_units: list,list of positive integer or empty list, the layer number and units in each layer of DNN
+    :param l2_reg_embedding: float. L2 regularizer strength applied to embedding vector
+    :param l2_reg_cross: float. L2 regularizer strength applied to cross net
+    :param l2_reg_dnn: float. L2 regularizer strength applied to DNN
+    :param init_std: float,to use as the initialize std of embedding vector
+    :param seed: integer ,to use as random seed.
+    :param dnn_dropout: float in [0,1), the probability we will drop out a given DNN coordinate.
+    :param dnn_use_bn: bool. Whether use BatchNormalization before activation or not DNN
+    :param dnn_activation: Activation function to use in DNN
+    :param task: str, ``"binary"`` for  binary logloss or  ``"regression"`` for regression loss
+    :param device: str, ``"cpu"`` or ``"cuda:0"``
+    :param gpus: list of int or torch.device for multiple gpus. If None, run on `device`. `gpus[0]` should be the same gpu with `device`.
+    :return: A PyTorch model instance.
+
+    """
+    def __init__(self, linear_feature_columns, dnn_feature_columns, cross_num=2, cross_parameterization='vector',
+                 dnn_hidden_units=(128, 128), l2_reg_linear=0.00001, l2_reg_embedding=0.00001, l2_reg_cross=0.00001,
+                 l2_reg_dnn=0, init_std=0.0001, seed=1024, dnn_dropout=0, dnn_activation='relu', dnn_use_bn=False,
+                 task='binary', device='cpu', gpus=None):
+
+        super(DCN, self).__init__(linear_feature_columns=linear_feature_columns,
+                                  dnn_feature_columns=dnn_feature_columns, l2_reg_embedding=l2_reg_embedding,
+                                  init_std=init_std, seed=seed, task=task, device=device, gpus=gpus)
+        self.dnn_hidden_units = dnn_hidden_units
+        self.cross_num = cross_num
+        self.dnn = DNN(self.compute_input_dim(dnn_feature_columns), dnn_hidden_units,
+                       activation=dnn_activation, use_bn=dnn_use_bn, l2_reg=l2_reg_dnn, dropout_rate=dnn_dropout,
+                       init_std=init_std, device=device)
+        if len(self.dnn_hidden_units) > 0 and self.cross_num > 0:
+            dnn_linear_in_feature = self.compute_input_dim(dnn_feature_columns) + dnn_hidden_units[-1]
+        elif len(self.dnn_hidden_units) > 0:
+            dnn_linear_in_feature = dnn_hidden_units[-1]
+        elif self.cross_num > 0:
+            dnn_linear_in_feature = self.compute_input_dim(dnn_feature_columns)
+
+        self.dnn_linear = nn.Linear(dnn_linear_in_feature, 1, bias=False).to(
+            device)
+        self.crossnet = CrossNet(in_features=self.compute_input_dim(dnn_feature_columns),
+                                 layer_num=cross_num, parameterization=cross_parameterization, device=device)
+        self.add_regularization_weight(
+            filter(lambda x: 'weight' in x[0] and 'bn' not in x[0], self.dnn.named_parameters()), l2=l2_reg_dnn)
+        self.add_regularization_weight(self.dnn_linear.weight, l2=l2_reg_linear)
+        self.add_regularization_weight(self.crossnet.kernels, l2=l2_reg_cross)
+        self.to(device)
+
+    def forward(self, X):
+        logit = self.linear_model(X)
+        sparse_embedding_list, dense_value_list = self.input_from_feature_columns(X, self.dnn_feature_columns,
+                                                                                  self.embedding_dict)
+
+        dnn_input = combined_dnn_input(sparse_embedding_list, dense_value_list)
+
+        if len(self.dnn_hidden_units) > 0 and self.cross_num > 0:  # Deep & Cross
+            deep_out = self.dnn(dnn_input)
+            cross_out = self.crossnet(dnn_input)
+            stack_out = torch.cat((cross_out, deep_out), dim=-1)
+            logit += self.dnn_linear(stack_out)
+        elif len(self.dnn_hidden_units) > 0:  # Only Deep
+            deep_out = self.dnn(dnn_input)
+            logit += self.dnn_linear(deep_out)
+        elif self.cross_num > 0:  # Only Cross
+            cross_out = self.crossnet(dnn_input)
+            logit += self.dnn_linear(cross_out)
+        else:  # Error
+            pass
+        y_pred = self.out(logit)
+        return y_pred
+```
 
 ## Deep Interest Network
 
