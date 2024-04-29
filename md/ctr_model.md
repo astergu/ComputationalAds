@@ -61,29 +61,30 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
 
 | Model | Paper | Affiliation | Key Takeaways |  
 | ---- | ---- | ---- | ---- |
-| Convolutional Click Prediction Model  | [CIKM 2015][A Convolutional Click Prediction Model](http://ir.ia.ac.cn/bitstream/173211/12337/1/A%20Convolutional%20Click%20Prediction%20Model.pdf)   | | |
-| Factorization-supported Neural Network | [ECIR 2016][Deep Learning over Multi-field Categorical Data: A Case Study on User Response Prediction](https://arxiv.org/pdf/1601.02376.pdf) |   |     |
-| Product-based Neural Network  | [ICDM 2016][Product-based neural networks for user response prediction](https://arxiv.org/pdf/1611.00144.pdf)  |  | |
-| Wide & Deep | [DLRS 2016][Wide & Deep Learning for Recommender Systems](https://arxiv.org/pdf/1606.07792.pdf)  | Google  |  1. Wide模型提供记忆能力；<br> 2. Deep模型提供泛化能力；<br> 3. Wide&Deep联合训练 <br>[[Detailed Notes]](#wide--deep)  |
-|  DeepFM  | [IJCAI 2017][DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](http://www.ijcai.org/proceedings/2017/0239.pdf) | Huawei | `Wide&Deep升级版` <br> 1. 将浅层部分的LR替换为FM；<br> 2. 浅层部分和深层部分共享输入; <br> 3. End-to-End，不需要人工特征工程 <br> [[Detailed Notes]](#deepfm) |
-|  Piece-wise Linear Model   | [arxiv 2017][Learning Piece-wise Linear Models from Large Scale Data for Ad Click Prediction](https://arxiv.org/abs/1704.05194)  | | |
-|  Deep & Cross Network  | [ADKDD 2017][Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123) | Google |  `Wide&Deep的进化版` <br> 1. 将Wide部分替换为Cross，自动构造高阶交叉特征   |
-|  Attentional Factorization Machine | [IJCAI 2017][Attentional Factorization Machines: Learning the Weight of Feature Interactions via Attention Networks](http://www.ijcai.org/proceedings/2017/435) | | |
-|  Neural Factorization Machine  | [SIGIR 2017][Neural Factorization Machines for Sparse Predictive Analytics](https://arxiv.org/pdf/1708.05027.pdf)  | | |
-|  xDeepFM | [KDD 2018][xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems](https://arxiv.org/pdf/1803.05170.pdf)  | | |
-|  Deep Interest Network  | [KDD 2018][Deep Interest Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1706.06978.pdf) | Alibaba | [[DIN]](#deep-interest-network)  | 
-|  Deep Interest Evolution Network | [AAAI 2019][Deep Interest Evolution Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1809.03672.pdf) | | |
-|  AutoInt | [CIKM 2019][AutoInt: Automatic Feature Interaction Learning via Self-Attentive Neural Networks](https://arxiv.org/abs/1810.11921)  | | |
-|  ONN   | [arxiv 2019][Operation-aware Neural Networks for User Response Prediction](https://arxiv.org/pdf/1904.12579.pdf)  |  | |
-|  FiBiNET  | [RecSys 2019][FiBiNET: Combining Feature Importance and Bilinear feature Interaction for Click-Through Rate Prediction](https://arxiv.org/pdf/1905.09433.pdf)  | | |
-|  IFM  | [IJCAI 2019][An Input-aware Factorization Machine for Sparse Prediction](https://www.ijcai.org/Proceedings/2019/0203.pdf) |  | |
-|  DCN V2 | [arxiv 2020][DCN V2: Improved Deep & Cross Network and Practical Lessons for Web-scale Learning to Rank Systems](https://arxiv.org/abs/2008.13535)   | | |
-|  DIFM  | [IJCAI 2020][A Dual Input-aware Factorization Machine for CTR Prediction](https://www.ijcai.org/Proceedings/2020/0434.pdf) |  | |
-|  AFN  | [AAAI 2020][Adaptive Factorization Network: Learning Adaptive-Order Feature Interactions](https://arxiv.org/pdf/1909.03276)   | | |
-|  SharedBottom  | [arxiv 2017][An Overview of Multi-Task Learning in Deep Neural Networks](https://arxiv.org/pdf/1706.05098.pdf)  | | |
-|  ESMM | [SIGIR 2018][Entire Space Multi-Task Model: An Effective Approach for Estimating Post-Click Conversion Rate](https://dl.acm.org/doi/10.1145/3209978.3210104)   |  | |
-|  MMOE | [KDD 2018][Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts](https://dl.acm.org/doi/abs/10.1145/3219819.3220007)  |   | |
-| PLE  | [RecSys 2020][Progressive Layered Extraction (PLE): A Novel Multi-Task Learning (MTL) Model for Personalized Recommendations](https://dl.acm.org/doi/10.1145/3383313.3412236)  |  |    |
+| GBDT&LR | [Practical Lessons from Predicting Clicks on Ads at Facebook](https://research.facebook.com/file/273183074306353/practical-lessons-from-predicting-clicks-on-ads-at-facebook.pdf) [ADKDD 2014] | Meta | LR+GBDT：<br> 1. Data freshness很重要，模型至少每天训练一次; <br> 2. 使用boosted decision tree进行特征转换提高了模型性能; <br> 3. 在线学习：LR+per-coordinate learning rate  [[Detailed Notes]](#lr--gbdt) | 
+| Convolutional Click Prediction Model  | [A Convolutional Click Prediction Model](http://ir.ia.ac.cn/bitstream/173211/12337/1/A%20Convolutional%20Click%20Prediction%20Model.pdf) [CIKM 2015]  | | |
+| Factorization-supported Neural Network | [Deep Learning over Multi-field Categorical Data: A Case Study on User Response Prediction](https://arxiv.org/pdf/1601.02376.pdf) [ECIR 2016] |   |     |
+| Product-based Neural Network  | [Product-based neural networks for user response prediction](https://arxiv.org/pdf/1611.00144.pdf) [ICDM 2016] |  | |
+| Wide & Deep | [Wide & Deep Learning for Recommender Systems](https://arxiv.org/pdf/1606.07792.pdf) [DLRS 2016] | Google  |  1. Wide模型提供记忆能力；<br> 2. Deep模型提供泛化能力；<br> 3. Wide&Deep联合训练 <br>[[Detailed Notes]](#wide--deep)  |
+|  DeepFM  | [DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](http://www.ijcai.org/proceedings/2017/0239.pdf) [IJCAI 2017] | Huawei | `Wide&Deep升级版` <br> 1. 将浅层部分的LR替换为FM；<br> 2. 浅层部分和深层部分共享输入; <br> 3. End-to-End，不需要人工特征工程 <br> [[Detailed Notes]](#deepfm) |
+|  Piece-wise Linear Model   | [Learning Piece-wise Linear Models from Large Scale Data for Ad Click Prediction](https://arxiv.org/abs/1704.05194) [arxiv 2017]  | | |
+|  Deep & Cross Network  | [Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123) [ADKDD 2017] | Google |  `Wide&Deep的进化版` <br> 1. 将Wide部分替换为Cross，自动构造高阶交叉特征   |
+|  Attentional Factorization Machine | [Attentional Factorization Machines: Learning the Weight of Feature Interactions via Attention Networks](http://www.ijcai.org/proceedings/2017/435) [IJCAI 2017] | | |
+|  Neural Factorization Machine  | [Neural Factorization Machines for Sparse Predictive Analytics](https://arxiv.org/pdf/1708.05027.pdf) [SIGIR 2017]  | | |
+|  xDeepFM | [xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems](https://arxiv.org/pdf/1803.05170.pdf) [KDD 2018] | Microsoft | |
+|  Deep Interest Network  | [Deep Interest Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1706.06978.pdf) [KDD 2018] | Alibaba | [[DIN]](#deep-interest-network)  | 
+|  Deep Interest Evolution Network | [Deep Interest Evolution Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1809.03672.pdf) [AAAI 2019] | | |
+|  AutoInt | [AutoInt: Automatic Feature Interaction Learning via Self-Attentive Neural Networks](https://arxiv.org/abs/1810.11921) [CIKM 2019]  | | |
+|  ONN   | [Operation-aware Neural Networks for User Response Prediction](https://arxiv.org/pdf/1904.12579.pdf) [arxiv 2019]  |  | |
+|  FiBiNET  | [FiBiNET: Combining Feature Importance and Bilinear feature Interaction for Click-Through Rate Prediction](https://arxiv.org/pdf/1905.09433.pdf) [RecSys 2019] | | |
+|  IFM  | [An Input-aware Factorization Machine for Sparse Prediction](https://www.ijcai.org/Proceedings/2019/0203.pdf) [IJCAI 2019] |  | |
+|  DCN V2 | [DCN V2: Improved Deep & Cross Network and Practical Lessons for Web-scale Learning to Rank Systems](https://arxiv.org/abs/2008.13535) [arxiv 2020]  | | |
+|  DIFM  | [A Dual Input-aware Factorization Machine for CTR Prediction](https://www.ijcai.org/Proceedings/2020/0434.pdf) [IJCAI 2020] |  | |
+|  AFN  | [Adaptive Factorization Network: Learning Adaptive-Order Feature Interactions](https://arxiv.org/pdf/1909.03276) [AAAI 2020]  | | |
+|  SharedBottom  | [An Overview of Multi-Task Learning in Deep Neural Networks](https://arxiv.org/pdf/1706.05098.pdf) [arxiv 2017] | | |
+|  ESMM | [Entire Space Multi-Task Model: An Effective Approach for Estimating Post-Click Conversion Rate](https://dl.acm.org/doi/10.1145/3209978.3210104) [SIGIR 2018]  |  | |
+|  MMOE | [Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts](https://dl.acm.org/doi/abs/10.1145/3219819.3220007) [KDD 2018] |   | |
+| PLE  | [Progressive Layered Extraction (PLE): A Novel Multi-Task Learning (MTL) Model for Personalized Recommendations](https://dl.acm.org/doi/10.1145/3383313.3412236) [RecSys 2020]  |  |    |
 
 
 
@@ -108,6 +109,25 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
 
 LR一直是CTR预估的benchmark模型，具有简单、易于并行化实现、可解释性强等优点，但是LR模型中的特征是默认相互独立的，遇到具有交叉可能性的特征需进行大量的人工特征工程进行交叉(连续特征的离散化、特征交叉)，不能处理目标和特征之间的非线性关系。LR将特征加权求和并经sigmoid即得到CTR值。
 
+```python
+class LogisticRegression(nn.Module):
+    """
+        LR
+    """
+    def __init__(self, feature_fields):
+        super(LogisticRegression, self).__init__()
+        self.feature_fields = feature_fields
+        
+        self.linear = torch.nn.Embedding(sum(feature_fields)+1, 1)
+        self.bias = torch.nn.Parameter(torch.zeros((1,)))     
+        self.offset = np.array((0, *np.cumsum(feature_fields)[:-1]), dtype = np.long)
+        
+    def forward(self, x):
+        x = x + x.new_tensor(self.offset).unsqueeze(0)
+        x = torch.sum(self.linear(x), dim = 1) + self.bias
+        x = torch.sigmoid(x.squeeze(1))
+        return x
+```
 
 ## LR + GBDT
 
@@ -118,6 +138,45 @@ $f(x)=logistics(gbdtree_1(X) gbdtree_2(X) ...)$
 GBDT优势在于处理连续值特征，如用户历史点击率、用户历史浏览次数等连续值。由于树的分裂算法，具有一定组合特征的能力。GBDT根据最优的分裂特征和该特征的最优分裂点，根据特征的分裂次数得到一个特征的重要性排序，GBDT减少了人工特征工程的工作量。
 
 但是大多数推荐系统中出现的是大规模的离散化特征，使用GBDT需要首先统计成连续值特征(embedding)，需要耗费时间，GBDT具有记忆性强的特点，不利于挖掘长尾特征。而且GBDT虽然具有一定组合特征能力，但是组合的能力十分有限，远不能与DNN相比。
+
+- **模型**
+  - 决策树特征转换（Decision tree feature transforms）
+    - 对特征进行分桶，把桶的序号作为特征
+    - 构建tuple特征，如果特征是连续的，可以做joint binning，比如k-d树
+    - $L_2$-TreeBoost算法
+    - 树特征转换有助于降低NE，相比于不做特征转换，降低3.4%
+  - LR线性分类器（online linear classifier）
+    - 针对Logistic Regression在线增量训练
+      - 尝试了多种学习率配置，最后实验结果证明per-coordinate learning rate效果最好
+        - $\eta_{t,i}=\frac{\alpha}{\beta+\sqrt{\sum_{j=1}^t}\nabla_{j_i}^2}$，也就是学习率随着迭代次数$t$和不同特征$i$而变化
+  - 线上模型架构
+    - 最关键的步骤就是把labels（click/no-click）和训练输入（ad impressions）以一种在线的方式连起来，也就是online data joiner需要做到的事情
+      - Label标注
+        - 设定一个足够长的阈值，如果用户在阈值时间内没有点击广告就标记为no-click，点击则标记为click
+      - 数据采样
+        - 均匀采样：简单易于实现，没有改变训练数据的分布
+        - Negative down sampling：广告中的训练数据分布极度不平衡，因此可以对负样本进行欠采样，采样率为0.025效果最好
+      - Model Re-calibration 校准：负样本欠采样可以加快训练速度并提升模型性能，但是改变了数据分布，因此需要校准
+        - 比如，采样前CTR均值为0.1%，使用0.01采样之后，CTR均值变为10%，校准公式为：
+          - $q=\frac{p}{p+(1-p)/w}$，其中$w$是采样率，$p$是在采样后空间中给出的CTR预估值，而计算得到的$q$就是修正后的结果
+      - Boosting tree的数量
+        - 随着boosting tree数量的增加，模型性能有所提升，但几乎所有提升都来自于前500个tree
+      - Boosting特征重要性（boosting feature importance）
+        - 特征重要度主要集中在top10，贡献了50%的重要度，后面300个特征，贡献了1%的重要度
+      - Historical Features 历史特征 vs. Context Features 上下文特征
+        - 历史信息特征占主导地位
+- **实验结果**
+  - 2013年第四季度的某一个星期的离线数据
+  - 评估标准
+    - Normalized Entropy (NE)
+      - predictive log loss normalized by the entropy of the background CTR
+      - The lower, the better
+      - $NE=\frac{-\frac{1}{N}\sum_{i=1}^n (\frac{1+y_i}{2}log(p_i)+\frac{1-y_i}{2}log(1-p_i))}{-(p\times log(p)+(1-p)\times log(1-p))}$
+    - Calibration
+      - The ratio of the average estimated CTR and empirical CTR
+  - 数据新鲜度（Data freshness）
+    - 一天的数据作为训练集，其后的一天或几天作为测试数据
+    - 随着天数的往后，模型的性能越来越差，因此需要每天重新训练
 
 ## Wide & Deep 
 
