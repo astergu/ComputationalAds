@@ -37,6 +37,8 @@ Amazon在2001年提出的用于推荐领域的一个算法，是推荐领域最�
 | Paper | Affiliation | Key Takeaways |
 | ---- | ---- | ---- |
 | [Deep Neural Networks for YouTube Recommendations](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45530.pdf) (RecSys 2016) | YouTube | |
+| [Neural Collaborative Filtering]() (WWW 2017) | | |
+| [Collaborative Memory Network for Recommendation Systems](SIGIR 2018) | | |
 | [Real-time Personalization using Embeddings for Search Ranking at Airbnb](https://dl.acm.org/doi/pdf/10.1145/3219819.3219885) (KDD 2018) | Airbnb | |
 
 ### Deep Neural Networks for YouTube Recommendations
