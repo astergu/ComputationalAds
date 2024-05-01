@@ -7,6 +7,7 @@
   - [Deep \& Cross Network (DCN)](#deep--cross-network-dcn)
   - [xDeepFM](#xdeepfm)
   - [Deep Interest Network](#deep-interest-network)
+  - [Deep Interest Evolution Network](#deep-interest-evolution-network)
   - [FM/FFM](#fmffm)
     - [FM](#fm)
     - [FFM (Field-aware Factorization Machine)](#ffm-field-aware-factorization-machine)
@@ -70,7 +71,7 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
 |  Attentional Factorization Machine | [Attentional Factorization Machines: Learning the Weight of Feature Interactions via Attention Networks](http://www.ijcai.org/proceedings/2017/435) [IJCAI 2017] | | |
 |  Neural Factorization Machine  | [Neural Factorization Machines for Sparse Predictive Analytics](https://arxiv.org/pdf/1708.05027.pdf) [SIGIR 2017]  | | |
 |  xDeepFM | [xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems](https://arxiv.org/pdf/1803.05170.pdf) [KDD 2018] | Microsoft | `DCN升级版` <br> 1. 联合学习显式和隐式的高阶特征组合，无需人工特征工程; <br> 2. 压缩交互网络（CIN， Compressed Interaction Network）用来显式学习高阶特征组合 <br>  [[Detailed Notes]](#xdeepfm) |
-|  Deep Interest Network  | [Deep Interest Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1706.06978.pdf) [KDD 2018] | Alibaba | [[DIN]](#deep-interest-network)  | 
+|  Deep Interest Network  | [Deep Interest Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1706.06978.pdf) [KDD 2018] | Alibaba | 1. Local Activation Unit: 自适应地根据candidate来表征用户的兴趣。类似attention； <br> 2. 正则化对稀疏特征优化 <br> [[Detailed Notes]](#deep-interest-network)  | 
 |  Deep Interest Evolution Network | [Deep Interest Evolution Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1809.03672.pdf) [AAAI 2019] | | |
 |  AutoInt | [AutoInt: Automatic Feature Interaction Learning via Self-Attentive Neural Networks](https://arxiv.org/abs/1810.11921) [CIKM 2019]  | | |
 |  ONN   | [Operation-aware Neural Networks for User Response Prediction](https://arxiv.org/pdf/1904.12579.pdf) [arxiv 2019]  |  | |
@@ -517,25 +518,267 @@ class DCN(BaseModel):
       - 假设CIN和DNN每层神经元/向量个数都为$H$，网络深度为$T$。那么CIN的参数空间复杂度为$O(mTH^2)$，普通的DNN为O(mDH+TH^2)，CIN的空间复杂度与输入维度$D$无关，此外，如果有必要，CIN还可以对权重矩阵$W$进行$L$阶矩阵分解从而能降低空间复杂度
       - CIN的时间复杂度就不容乐观了，按照上面介绍的计算方式为$O(mH^2DT)$，而DNN为$O(mDH+TH^2)$，时间复杂度会是CIN的一个主要痛点。
 ![xdeepfm CIN](../image/xdeepfm_cin.png)
+![xdeepfm architecture](../image/xdeepfm_architecture.png)
 - **实验结果**
-  - 
+![xdeepfm experiment results](../image/xdeepfm_experiments.png)
+-**代码实现**
+
+```python
+class xDeepFM(BaseModel):
+    """Instantiates the xDeepFM architecture.
+
+    :param linear_feature_columns: An iterable containing all the features used by linear part of the model.
+    :param dnn_feature_columns: An iterable containing all the features used by deep part of the model.
+    :param dnn_hidden_units: list,list of positive integer or empty list, the layer number and units in each layer of deep net
+    :param cin_layer_size: list,list of positive integer or empty list, the feature maps  in each hidden layer of Compressed Interaction Network
+    :param cin_split_half: bool.if set to True, half of the feature maps in each hidden will connect to output unit
+    :param cin_activation: activation function used on feature maps
+    :param l2_reg_linear: float. L2 regularizer strength applied to linear part
+    :param l2_reg_embedding: L2 regularizer strength applied to embedding vector
+    :param l2_reg_dnn: L2 regularizer strength applied to deep net
+    :param l2_reg_cin: L2 regularizer strength applied to CIN.
+    :param init_std: float,to use as the initialize std of embedding vector
+    :param seed: integer ,to use as random seed.
+    :param dnn_dropout: float in [0,1), the probability we will drop out a given DNN coordinate.
+    :param dnn_activation: Activation function to use in DNN
+    :param dnn_use_bn: bool. Whether use BatchNormalization before activation or not in DNN
+    :param task: str, ``"binary"`` for  binary logloss or  ``"regression"`` for regression loss
+    :param device: str, ``"cpu"`` or ``"cuda:0"``
+    :param gpus: list of int or torch.device for multiple gpus. If None, run on `device`. `gpus[0]` should be the same gpu with `device`.
+    :return: A PyTorch model instance.
+
+    """
+    def __init__(self, linear_feature_columns, dnn_feature_columns, dnn_hidden_units=(256, 256),
+                 cin_layer_size=(256, 128,), cin_split_half=True, cin_activation='relu', l2_reg_linear=0.00001,
+                 l2_reg_embedding=0.00001, l2_reg_dnn=0, l2_reg_cin=0, init_std=0.0001, seed=1024, dnn_dropout=0,
+                 dnn_activation='relu', dnn_use_bn=False, task='binary', device='cpu', gpus=None):
+
+        super(xDeepFM, self).__init__(linear_feature_columns, dnn_feature_columns, l2_reg_linear=l2_reg_linear,
+                                      l2_reg_embedding=l2_reg_embedding, init_std=init_std, seed=seed, task=task,
+                                      device=device, gpus=gpus)
+        self.dnn_hidden_units = dnn_hidden_units
+        self.use_dnn = len(dnn_feature_columns) > 0 and len(dnn_hidden_units) > 0
+        if self.use_dnn:
+            self.dnn = DNN(self.compute_input_dim(dnn_feature_columns), dnn_hidden_units,
+                           activation=dnn_activation, l2_reg=l2_reg_dnn, dropout_rate=dnn_dropout, use_bn=dnn_use_bn,
+                           init_std=init_std, device=device)
+            self.dnn_linear = nn.Linear(dnn_hidden_units[-1], 1, bias=False).to(device)
+            self.add_regularization_weight(
+                filter(lambda x: 'weight' in x[0] and 'bn' not in x[0], self.dnn.named_parameters()), l2=l2_reg_dnn)
+
+            self.add_regularization_weight(self.dnn_linear.weight, l2=l2_reg_dnn)
+
+        self.cin_layer_size = cin_layer_size
+        self.use_cin = len(self.cin_layer_size) > 0 and len(dnn_feature_columns) > 0
+        if self.use_cin:
+            field_num = len(self.embedding_dict)
+            if cin_split_half == True:
+                self.featuremap_num = sum(
+                    cin_layer_size[:-1]) // 2 + cin_layer_size[-1]
+            else:
+                self.featuremap_num = sum(cin_layer_size)
+            self.cin = CIN(field_num, cin_layer_size,
+                           cin_activation, cin_split_half, l2_reg_cin, seed, device=device)
+            self.cin_linear = nn.Linear(self.featuremap_num, 1, bias=False).to(device)
+            self.add_regularization_weight(filter(lambda x: 'weight' in x[0], self.cin.named_parameters()),
+                                           l2=l2_reg_cin)
+
+        self.to(device)
+
+    def forward(self, X):
+        sparse_embedding_list, dense_value_list = self.input_from_feature_columns(X, self.dnn_feature_columns,
+                                                                                  self.embedding_dict)
+
+        linear_logit = self.linear_model(X)
+        if self.use_cin:
+            cin_input = torch.cat(sparse_embedding_list, dim=1)
+            cin_output = self.cin(cin_input)
+            cin_logit = self.cin_linear(cin_output)
+        if self.use_dnn:
+            dnn_input = combined_dnn_input(sparse_embedding_list, dense_value_list)
+            dnn_output = self.dnn(dnn_input)
+            dnn_logit = self.dnn_linear(dnn_output)
+
+        if len(self.dnn_hidden_units) == 0 and len(self.cin_layer_size) == 0:  # only linear
+            final_logit = linear_logit
+        elif len(self.dnn_hidden_units) == 0 and len(self.cin_layer_size) > 0:  # linear + CIN
+            final_logit = linear_logit + cin_logit
+        elif len(self.dnn_hidden_units) > 0 and len(self.cin_layer_size) == 0:  # linear +　Deep
+            final_logit = linear_logit + dnn_logit
+        elif len(self.dnn_hidden_units) > 0 and len(self.cin_layer_size) > 0:  # linear + CIN + Deep
+            final_logit = linear_logit + dnn_logit + cin_logit
+        else:
+            raise NotImplementedError
+
+        y_pred = self.out(final_logit)
+        return y_pred
+```
+
 
 ## Deep Interest Network
 
 - **主要贡献点**
   - `Local Activation Unit`: 设计了一个local activation unit来学习用户兴趣的表征，对于不同的商品来说，这个用户表征是不一样的。
-  - `Mini-batch aware regularization`
-  - `Data Adaptive Activation Function`：
-- 背景
+  - `Mini-batch aware regularization`：在batch中只有非零特征参与L2 norm的计算（稀疏特征仅更新部分参数）
+  - `Data Adaptive Activation Function`：激活函数自适应
+- **背景**
   - 在电商场景下，CTR预估面临的问题是，用户的兴趣多种多样，存在于浏览、点击、加购物车、购买等等各类行为中，我们怎么样根据繁多的用户行为序列去预估当前的点击概率。[深度兴趣网络DIN](../papers/deep_interest_network.pdf)引入注意力（attention）机制，在预测时，对用户不同行为的注意力不一样。
   - 在此之前，通常会一碗水端平地考虑所有行为的影响，对应到模型中，就是我们会用一个average pooling层把用户交互过的所有商品的embedding平均一下形成这个用户的user vector。顶多，考虑用户行为历史的发生时间，引入time decay，让最近的行为产生的影响大一下，也就是在做average pooling的时候按时间调整一下权重。
   - 但是，在不同的时刻，不同的场景下，用户当下的关注点不总是和所有的用户历史行为相关，比如情人节快到了，用户可能就突然开始对巧克力、鲜花等商品感兴趣。**注意力机制，就是模型在预测的时候，对用户不同行为的注意力是不一样的**。
-- 模型
-  - $V_u=f(V_a)=\sum_{i=1}^N w_i V_i=\sum_{i=1}^N g(V_i,V_a) V_i$
-  - 上式中，$V_u$是用户的embedding向量，$V_a$是候选商品的embedding向量，$V_i$是用户$u$的第$i$次行为的embedding向量，比如用户浏览商品或店铺的embedding向量。因为加入了注意力机制，$V_u$从$V_i$的加和变成了$V_i$的加权和，$V_i$的权重$w_i$就由$V_i$与$V_a$的关系决定，也就是上式中的$g(V_i,V_a)$。
-  - 相比原来的Base Model，DIN在生成用户embedding的时候加入了一个activation unit层，这一层产生了每个用户行为$V_i$的权重。下面我们仔细看一下这个权重是怎么生成的，也就是$g(V_i,V_a)$是如何定义的。
+- **特征**
+  - 没有组合特征，通过DNN建模特征交互信息
 
-![注意力机制](https://pic4.zhimg.com/v2-b8251f4d2a41f1a7de359c330a355530_1440w.jpg?source=172ae18b)
+![din feature statistics](../image/din_feature_statistics.png)
+- **模型**
+  - 基础模型（Base Model）—— Embedding & MLP
+    - Embedding layer
+      - 将高维稀疏特征转换为低维稠密embedding
+    - Pooling layer and Concat layer
+      - 不同用户有不同数量的用户行为，所以需要通过pooling layer来将不等长的embedding转换到定长的embedding。一般使用sum pooling或者average pooling
+    - MLP
+      - 拿到concat的embedding以后，MLP进行学习
+    - Loss
+      - negative log-likelihood $L=-\frac{1}{N}\sum_{(x,y)\in S}(ylogp(x)+(1-y)log(1-p(x)))$
+  - **DIN模型**
+    - Base模型的问题
+      - 即使面对不同的广告，用户行为pooling之后的embedding也固定不变
+    - DIN的解决方案
+      - `Local Activation Unit`: 模拟用户看到当前广告的心理状态，对用户的历史行为做一个软搜索（soft search），与当前广告有关的历史行为才会对click action做出贡献。因此，不同的广告对应的用户行为embedding是不同的
+        - $V_u=f(V_a)=\sum_{i=1}^N w_i V_i=\sum_{i=1}^N g(V_i,V_a) V_i$
+        - 上式中，$V_u$是用户的embedding向量，$V_a$是候选商品的embedding向量，$V_i$是用户$u$的第$i$次行为的embedding向量，比如用户浏览商品或店铺的embedding向量。因为加入了注意力机制，$V_u$从$V_i$的加和变成了$V_i$的加权和，$V_i$的权重$w_i$就由$V_i$与$V_a$的关系决定，也就是上式中的$g(V_i,V_a)$。
+        - 与attention机制有点相似
+        - 尝试过LSTM来序列建模用户行为，但是没有改进效果
+    - 训练技巧
+      - Mini-batch Aware Regularization
+      - Data Adaptive Activation Function
+
+![DIN model](../image/din_model.png)
+- **实验结果**
+  - AUC $=\frac{\sum_{i=1}^n \#impression_i\times AUC_i}{\sum_{i=1}^n \#impression_i}$
+  - RelaImpr $=(\frac{AUC(measured model) - 0.5}{AUC(base model) - 0.5} - 1) \times 100\%$
+
+![DIN experiments](../image/din_experiments.png)
+
+- **代码实现**
+
+```python
+class DIN(BaseModel):
+    """Instantiates the Deep Interest Network architecture.
+
+    :param dnn_feature_columns: An iterable containing all the features used by deep part of the model.
+    :param history_feature_list: list,to indicate  sequence sparse field
+    :param dnn_use_bn: bool. Whether use BatchNormalization before activation or not in deep net
+    :param dnn_hidden_units: list,list of positive integer or empty list, the layer number and units in each layer of deep net
+    :param dnn_activation: Activation function to use in deep net
+    :param att_hidden_size: list,list of positive integer , the layer number and units in each layer of attention net
+    :param att_activation: Activation function to use in attention net
+    :param att_weight_normalization: bool. Whether normalize the attention score of local activation unit.
+    :param l2_reg_dnn: float. L2 regularizer strength applied to DNN
+    :param l2_reg_embedding: float. L2 regularizer strength applied to embedding vector
+    :param dnn_dropout: float in [0,1), the probability we will drop out a given DNN coordinate.
+    :param init_std: float,to use as the initialize std of embedding vector
+    :param seed: integer ,to use as random seed.
+    :param task: str, ``"binary"`` for  binary logloss or  ``"regression"`` for regression loss
+    :param device: str, ``"cpu"`` or ``"cuda:0"``
+    :param gpus: list of int or torch.device for multiple gpus. If None, run on `device`. `gpus[0]` should be the same gpu with `device`.
+    :return:  A PyTorch model instance.
+
+    """
+    def __init__(self, dnn_feature_columns, history_feature_list, dnn_use_bn=False,
+                 dnn_hidden_units=(256, 128), dnn_activation='relu', att_hidden_size=(64, 16),
+                 att_activation='Dice', att_weight_normalization=False, l2_reg_dnn=0.0,
+                 l2_reg_embedding=1e-6, dnn_dropout=0, init_std=0.0001,
+                 seed=1024, task='binary', device='cpu', gpus=None):
+        super(DIN, self).__init__([], dnn_feature_columns, l2_reg_linear=0, l2_reg_embedding=l2_reg_embedding,
+                                  init_std=init_std, seed=seed, task=task, device=device, gpus=gpus)
+
+        self.sparse_feature_columns = list(
+            filter(lambda x: isinstance(x, SparseFeat), dnn_feature_columns)) if dnn_feature_columns else []
+        self.varlen_sparse_feature_columns = list(
+            filter(lambda x: isinstance(x, VarLenSparseFeat), dnn_feature_columns)) if dnn_feature_columns else []
+
+        self.history_feature_list = history_feature_list
+
+        self.history_feature_columns = []
+        self.sparse_varlen_feature_columns = []
+        self.history_fc_names = list(map(lambda x: "hist_" + x, history_feature_list))
+
+        for fc in self.varlen_sparse_feature_columns:
+            feature_name = fc.name
+            if feature_name in self.history_fc_names:
+                self.history_feature_columns.append(fc)
+            else:
+                self.sparse_varlen_feature_columns.append(fc)
+
+        att_emb_dim = self._compute_interest_dim()
+
+        self.attention = AttentionSequencePoolingLayer(att_hidden_units=att_hidden_size,
+                                                       embedding_dim=att_emb_dim,
+                                                       att_activation=att_activation,
+                                                       return_score=False,
+                                                       supports_masking=False,
+                                                       weight_normalization=att_weight_normalization)
+
+        self.dnn = DNN(inputs_dim=self.compute_input_dim(dnn_feature_columns),
+                       hidden_units=dnn_hidden_units,
+                       activation=dnn_activation,
+                       dropout_rate=dnn_dropout,
+                       l2_reg=l2_reg_dnn,
+                       use_bn=dnn_use_bn)
+        self.dnn_linear = nn.Linear(dnn_hidden_units[-1], 1, bias=False).to(device)
+        self.to(device)
+
+
+    def forward(self, X):
+        _, dense_value_list = self.input_from_feature_columns(X, self.dnn_feature_columns, self.embedding_dict)
+
+        # sequence pooling part
+        query_emb_list = embedding_lookup(X, self.embedding_dict, self.feature_index, self.sparse_feature_columns,
+                                          return_feat_list=self.history_feature_list, to_list=True)
+        keys_emb_list = embedding_lookup(X, self.embedding_dict, self.feature_index, self.history_feature_columns,
+                                         return_feat_list=self.history_fc_names, to_list=True)
+        dnn_input_emb_list = embedding_lookup(X, self.embedding_dict, self.feature_index, self.sparse_feature_columns,
+                                              to_list=True)
+        sequence_embed_dict = varlen_embedding_lookup(X, self.embedding_dict, self.feature_index,
+                                                      self.sparse_varlen_feature_columns)
+        sequence_embed_list = get_varlen_pooling_list(sequence_embed_dict, X, self.feature_index,
+                                                      self.sparse_varlen_feature_columns, self.device)
+        dnn_input_emb_list += sequence_embed_list
+        deep_input_emb = torch.cat(dnn_input_emb_list, dim=-1)
+
+        # concatenate
+        query_emb = torch.cat(query_emb_list, dim=-1)                     # [B, 1, E]
+        keys_emb = torch.cat(keys_emb_list, dim=-1)                       # [B, T, E]
+
+        keys_length_feature_name = [feat.length_name for feat in self.varlen_sparse_feature_columns if
+                                    feat.length_name is not None]
+        keys_length = torch.squeeze(maxlen_lookup(X, self.feature_index, keys_length_feature_name), 1)  # [B, 1]
+
+        hist = self.attention(query_emb, keys_emb, keys_length)           # [B, 1, E]
+
+        # deep part
+        deep_input_emb = torch.cat((deep_input_emb, hist), dim=-1)
+        deep_input_emb = deep_input_emb.view(deep_input_emb.size(0), -1)
+
+        dnn_input = combined_dnn_input([deep_input_emb], dense_value_list)
+        dnn_output = self.dnn(dnn_input)
+        dnn_logit = self.dnn_linear(dnn_output)
+
+        y_pred = self.out(dnn_logit)
+        return y_pred
+
+    def _compute_interest_dim(self):
+        interest_dim = 0
+        for feat in self.sparse_feature_columns:
+            if feat.name in self.history_feature_list:
+                interest_dim += feat.embedding_dim
+        return interest_dim
+```
+
+## Deep Interest Evolution Network
+
+- **主要贡献点**
+- **模型**
 
 ## FM/FFM
 
