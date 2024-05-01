@@ -30,9 +30,6 @@
   - [点击率预估 (CTR)](#点击率预估-ctr)
     - [特征表示 Feature Representation](#特征表示-feature-representation)
       - [Embedding表示](#embedding表示)
-    - [LR模型](#lr模型)
-      - [在线优化算法](#在线优化算法)
-    - [LR+GBDT](#lrgbdt)
     - [FM(Factorization Machine)因子分解机、FFM(Field-aware Factorizatiion Machine)](#fmfactorization-machine因子分解机ffmfield-aware-factorizatiion-machine)
     - [混合逻辑回归（MLR）](#混合逻辑回归mlr)
     - [Wide \& Deep Learning (WDL)](#wide--deep-learning-wdl)
@@ -69,10 +66,10 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
 | Wide & Deep | [Wide & Deep Learning for Recommender Systems](https://arxiv.org/pdf/1606.07792.pdf) [DLRS 2016] | Google  |  1. Wide模型提供记忆能力；<br> 2. Deep模型提供泛化能力；<br> 3. Wide&Deep联合训练 <br>[[Detailed Notes]](#wide--deep)  |
 |  DeepFM  | [DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](http://www.ijcai.org/proceedings/2017/0239.pdf) [IJCAI 2017] | Huawei | `Wide&Deep升级版` <br> 1. 将浅层部分的LR替换为FM；<br> 2. 浅层部分和深层部分共享输入; <br> 3. End-to-End，不需要人工特征工程 <br> [[Detailed Notes]](#deepfm) |
 |  Piece-wise Linear Model   | [Learning Piece-wise Linear Models from Large Scale Data for Ad Click Prediction](https://arxiv.org/abs/1704.05194) [arxiv 2017]  | | |
-|  Deep & Cross Network  | [Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123) [ADKDD 2017] | Google |  `Wide&Deep的进化版` <br> 将Wide部分替换为Cross，自动构造高阶交叉特征 <br> [[Detailed Notes]](#deep--cross-network-dcn)  |
+|  Deep & Cross Network  | [Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123) [ADKDD 2017] | Google |  `Wide&Deep进化版` <br> 将Wide部分替换为Cross，自动构造高阶交叉特征 <br> [[Detailed Notes]](#deep--cross-network-dcn)  |
 |  Attentional Factorization Machine | [Attentional Factorization Machines: Learning the Weight of Feature Interactions via Attention Networks](http://www.ijcai.org/proceedings/2017/435) [IJCAI 2017] | | |
 |  Neural Factorization Machine  | [Neural Factorization Machines for Sparse Predictive Analytics](https://arxiv.org/pdf/1708.05027.pdf) [SIGIR 2017]  | | |
-|  xDeepFM | [xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems](https://arxiv.org/pdf/1803.05170.pdf) [KDD 2018] | Microsoft | [[Detailed Notes]](#xdeepfm) |
+|  xDeepFM | [xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems](https://arxiv.org/pdf/1803.05170.pdf) [KDD 2018] | Microsoft | `DCN升级版` <br> 1. 联合学习显式和隐式的高阶特征组合，无需人工特征工程; <br> 2. 压缩交互网络（CIN， Compressed Interaction Network）用来显式学习高阶特征组合 <br>  [[Detailed Notes]](#xdeepfm) |
 |  Deep Interest Network  | [Deep Interest Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1706.06978.pdf) [KDD 2018] | Alibaba | [[DIN]](#deep-interest-network)  | 
 |  Deep Interest Evolution Network | [Deep Interest Evolution Network for Click-Through Rate Prediction](https://arxiv.org/pdf/1809.03672.pdf) [AAAI 2019] | | |
 |  AutoInt | [AutoInt: Automatic Feature Interaction Learning via Self-Attentive Neural Networks](https://arxiv.org/abs/1810.11921) [CIKM 2019]  | | |
@@ -108,7 +105,16 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
 
 ## Logistic Regression
 
-LR一直是CTR预估的benchmark模型，具有简单、易于并行化实现、可解释性强等优点，但是LR模型中的特征是默认相互独立的，遇到具有交叉可能性的特征需进行大量的人工特征工程进行交叉(连续特征的离散化、特征交叉)，不能处理目标和特征之间的非线性关系。LR将特征加权求和并经sigmoid即得到CTR值。
+将用户是否点击一个物品看成回归问题以后，使用最广泛的模型当属逻辑回归 Logistic Regression。LR模型是广义线性模型，从其函数形式来看，LR模型可以看作是一个没有隐层的神经网络模型（感知机模型）。
+
+LR模型一直是CTR预估问题的benchmark模型，由于其简单、易于并行化实现、可解释性强等优点而被广泛使用。然而由于线性模型本身的局限，不能处理特征和目标之间的非线性关系，因此模型效果严重依赖于算法工程师的特征工程经验。为了让线性模型能够学习到原始特征与拟合目标之间的非线性关系，通常需要对原始特征做一些非线性转换。常用的转换方法包括：**连续特征离散化**、**特征之间的交叉**等。
+
+- **连续特征离散化**
+    - 连续特征离散化的方法一般是把原始连续值的值域范围划分为多个区间，比如等频划分或等间距划分，更好的划分方法是利用监督学习的方式训练一个简单的单特征的决策树桩模型，即用信息增益指标来决定分裂点。特征离散化相当于把线性函数变成了分段线性函数，从而引入了非线性结构。
+- **特征之间的交叉**
+    - 通常CTR预估涉及到用户、物品、上下文等几方面的特征，往往单个特征对目标判定的贡献是较弱的，而不同类型的特征组合在一起就能够对目标的判定产生较强的贡献。比如用户性别和商品类目交叉就能够刻画例如“女性用户偏爱美妆类目”，“男性用户喜欢男装类目”的知识。
+
+LR模型的不足在于特征工程耗费了大量的精力，而且即使有经验的工程师也很难穷尽所有的特征交叉组合。
 
 ```python
 class LogisticRegression(nn.Module):
@@ -490,8 +496,29 @@ class DCN(BaseModel):
 
 ## xDeepFM
 
+- **主要贡献点**
+  - DCN的升级版，把DCN中的cross network替换为Compressed Interaction Network (CIN)
+  - 联合学习显式和隐式的高阶特征组合，无需人工特征工程
+  - 压缩交互网络（CIN， Compressed Interaction Network）用来显式学习高阶特征组合
 - **模型**
-  - Compressed Interaction Network (CIN)
+  - **Compressed Interaction Network（CIN）**
+    - 优点
+      - 交互是在vector-wise level，而不是在bit-wise level
+      - 高阶特征组合显式
+      - 网络复杂度不会随着组合维度而指数上升
+    - CIN层的输入来自于Embedding层，假设有$m$个field，每个field的embedding vector维度为$D$，则输入可表示为矩阵$X^0 \in \mathbb{R}^{m*D}$
+    - CIN计算：
+      - 取前一层$X^{k-1}\in \mathbb{R}^{H_{k-1}*D}$中的$H_{k-1}$个vector，与输入层$X^0\in \mathbb{R}^{m*D}$中的$m$个vector，进行两两Hadamard乘积运算，得到$H_{k-1}*m$个vector，然后加权求和
+      - 第$k$层的不同vector区别在于，对这$H_{k-1}*m$个vector求和的权重矩阵不同。$H_k$即对应有多少个不同的权重矩阵$W^k$，是一个可以调整的超参
+    - CIN与Cross的差异：
+      - Cross是bit-wise的，而CIN是vector-wise的
+      - 在第$l$层，Cross包含从1阶到第$l+1$阶的所有组合特征，而CIN只包含$l+1$阶的组合特征。相应地，Cross在输出层输出全部结果，而CIN在每层都输出中间结果。
+    - 复杂度
+      - 假设CIN和DNN每层神经元/向量个数都为$H$，网络深度为$T$。那么CIN的参数空间复杂度为$O(mTH^2)$，普通的DNN为O(mDH+TH^2)，CIN的空间复杂度与输入维度$D$无关，此外，如果有必要，CIN还可以对权重矩阵$W$进行$L$阶矩阵分解从而能降低空间复杂度
+      - CIN的时间复杂度就不容乐观了，按照上面介绍的计算方式为$O(mH^2DT)$，而DNN为$O(mDH+TH^2)$，时间复杂度会是CIN的一个主要痛点。
+![xdeepfm CIN](../image/xdeepfm_cin.png)
+- **实验结果**
+  - 
 
 ## Deep Interest Network
 
@@ -698,37 +725,6 @@ Embedding表示也叫做Distributed representation，起源于神经网络语言
 
 Google公司开源的word2vec工具让embedding表示方法广为人知。Embedding表示通常用神经网络模型来学习，当然也有其他学习方法，比如矩阵分解（MF）、因子分解机（FM)等。
 
-
-
-### LR模型
-
-将用户是否点击一个物品看成回归问题以后，使用最广泛的模型当属逻辑回归 Logistic Regression。LR模型是广义线性模型，从其函数形式来看，LR模型可以看作是一个没有隐层的神经网络模型（感知机模型）。
-
-LR模型一直是CTR预估问题的benchmark模型，由于其简单、易于并行化实现、可解释性强等优点而被广泛使用。然而由于线性模型本身的局限，不能处理特征和目标之间的非线性关系，因此模型效果严重依赖于算法工程师的特征工程经验。为了让线性模型能够学习到原始特征与拟合目标之间的非线性关系，通常需要对原始特征做一些非线性转换。常用的转换方法包括：**连续特征离散化**、**特征之间的交叉**等。
-
-- **连续特征离散化**
-    - 连续特征离散化的方法一般是把原始连续值的值域范围划分为多个区间，比如等频划分或等间距划分，更好的划分方法是利用监督学习的方式训练一个简单的单特征的决策树桩模型，即用信息增益指标来决定分裂点。特征离散化相当于把线性函数变成了分段线性函数，从而引入了非线性结构。
-- **特征之间的交叉**
-    - 通常CTR预估涉及到用户、物品、上下文等几方面的特征，往往单个特征对目标判定的贡献是较弱的，而不同类型的特征组合在一起就能够对目标的判定产生较强的贡献。比如用户性别和商品类目交叉就能够刻画例如“女性用户偏爱美妆类目”，“男性用户喜欢男装类目”的知识。
-
-LR模型的不足在于特征工程耗费了大量的精力，而且即使有经验的工程师也很难穷尽所有的特征交叉组合。
-
-
-
-
-#### 在线优化算法
-
-求解该类问题最经典的算法是GD（梯度下降法），即沿着梯度方法逐渐优化模型参数。梯度下降法能够保证精度，要想预防过拟合问题一般会加上正则项，L1或者L2正则。
-
-相比于批量GD算法，OGD能够利用实时产生的正负样本，一定程度上能够优化模型效果。在线优化算法需要特殊关注模型鲁棒性和稀疏性，由于样本是一个一个到来，模型参数可能因为训练样本不足导致过拟合等。因此OGD会着重处理模型稀疏性。
-
-### LR+GBDT
-
-模型级联提供了一种思路，典型的例子就是Facebook 2014年的论文中介绍的通过GBDT（Gradient Boost Decision Tree）模型解决LR模型的特征组合问题。思路很简单，特征工程分为两部分，一部分特征用于训练一个GBDT模型，把GBDT模型每颗树的叶子节点编号作为新的特征，加入到原始特征集中，再用LR模型训练最终的模型。
-
-![LR+GBDT](https://pic3.zhimg.com/80/v2-37df8f79aa024bbca443a7adb1db6b0e_hd.jpg)
-
-GBDT模型能够学习高阶非线性特征组合，对应树的一条路径（用叶子节点来表示）。通常把一些连续值特征、值空间不大的categorical特征都丢给GBDT模型；空间很大的ID特征（比如商品ID）留在LR模型中训练，既能做高阶特征组合又能利用线性模型易于处理大规模稀疏数据的优势。
 
 ### FM(Factorization Machine)因子分解机、FFM(Field-aware Factorizatiion Machine)
 
