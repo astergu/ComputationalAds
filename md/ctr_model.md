@@ -2,6 +2,7 @@
   - [深度CTR模型的基本框架](#深度ctr模型的基本框架)
   - [Logistic Regression](#logistic-regression)
   - [LR + GBDT](#lr--gbdt)
+  - [Product-based Neural Networks](#product-based-neural-networks)
   - [Wide \& Deep](#wide--deep)
   - [DeepFM](#deepfm)
   - [Deep \& Cross Network (DCN)](#deep--cross-network-dcn)
@@ -54,7 +55,6 @@
 
 CTR预估本质是一个二分类问题，以移动端展示广告推荐为例，依据日志中的用户侧的信息（比如年龄，性别，国籍，手机上安装的app列表）、广告侧的信息（广告id，广告类别，广告标题等）、上下文侧信息（渠道id等），去建模预测用户是否会点击该广告。在CPC（cost-per-click）的广告系统中，广告是通过eCPM（effective cost per mille）来排序的，而eCPM是竞价（bid price）和CTR（click-through rate）的乘积。
 
-![architect](http://aistar.site/image001.png)
 
 ![algorithms](../image/algorithms.jpg)
 
@@ -63,7 +63,7 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
 | GBDT&LR | [Practical Lessons from Predicting Clicks on Ads at Facebook](https://research.facebook.com/file/273183074306353/practical-lessons-from-predicting-clicks-on-ads-at-facebook.pdf) [ADKDD 2014] | Meta | `LR+GBDT` <br> 1. Data freshness很重要，模型至少每天训练一次; <br> 2. 使用boosted decision tree进行特征转换提高了模型性能; <br> 3. 在线学习：LR+per-coordinate learning rate  [[Detailed Notes]](#lr--gbdt) | 
 | Convolutional Click Prediction Model  | [A Convolutional Click Prediction Model](http://ir.ia.ac.cn/bitstream/173211/12337/1/A%20Convolutional%20Click%20Prediction%20Model.pdf) [CIKM 2015]  | | |
 | Factorization-supported Neural Network | [Deep Learning over Multi-field Categorical Data: A Case Study on User Response Prediction](https://arxiv.org/pdf/1601.02376.pdf) [ECIR 2016] |   |     |
-| Product-based Neural Network  | [Product-based neural networks for user response prediction](https://arxiv.org/pdf/1611.00144.pdf) [ICDM 2016] |  | |
+| Product-based Neural Network  | [Product-based neural networks for user response prediction](https://arxiv.org/pdf/1611.00144.pdf) [ICDM 2016] | SJTU & UCL | |
 | Wide & Deep | [Wide & Deep Learning for Recommender Systems](https://arxiv.org/pdf/1606.07792.pdf) [DLRS 2016] | Google  |  1. Wide模型提供记忆能力；<br> 2. Deep模型提供泛化能力；<br> 3. Wide&Deep联合训练 <br>[[Detailed Notes]](#wide--deep)  |
 |  DeepFM  | [DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](http://www.ijcai.org/proceedings/2017/0239.pdf) [IJCAI 2017] | Huawei | `Wide&Deep升级版` <br> 1. 将浅层部分的LR替换为FM；<br> 2. 浅层部分和深层部分共享输入; <br> 3. End-to-End，不需要人工特征工程 <br> [[Detailed Notes]](#deepfm) |
 |  Piece-wise Linear Model   | [Learning Piece-wise Linear Models from Large Scale Data for Ad Click Prediction](https://arxiv.org/abs/1704.05194) [arxiv 2017]  | | |
@@ -102,7 +102,16 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
 - `输出`
   - 将特征交互模块输出的标量用sigmoid函数映射到[0, 1]，即表示CTR。
 
+Embedding+MLP 是对于分领域离散特征进行深度学习 CTR 预估的通用框架。深度学习在特征组合挖掘（特征学习）方面具有很大的优势。比如以 CNN 为代表的深度网络主要用于图像、语音等稠密特征上的学习，以 W2V、RNN 为代表的深度网络主要用于文本的同质化、序列化高维稀疏特征的学习。CTR 预估的主要场景是对离散且有具体领域的特征进行学习，所以其深度网络结构也不同于 CNN 与 RNN。 
 
+具体来说，Embedding+MLP 的过程如下： 
+
+1. 对不同领域的 one-hot 特征进行嵌入（embedding），使其降维成低维度稠密特征。 
+2. 然后将这些特征向量拼接（concatenate）成一个隐含层。 
+3. 之后再不断堆叠全连接层，也就是多层感知机（Multilayer Perceptron, MLP，有时也叫作前馈神经网络）。 
+4. 最终输出预测的点击率。 
+
+![architect](../image/deep_ctr_evolution.png)
 
 ## Logistic Regression
 
@@ -185,6 +194,108 @@ GBDT优势在于处理连续值特征，如用户历史点击率、用户历史�
   - 数据新鲜度（Data freshness）
     - 一天的数据作为训练集，其后的一天或几天作为测试数据
     - 随着天数的往后，模型的性能越来越差，因此需要每天重新训练
+
+## Product-based Neural Networks
+
+  - **主要贡献点**
+  - **模型**
+    - PNN与标准的「Embedding+MLP」差异仅在于引入了Product Layer。Product layer可以分成两个部分，一部分是线性部分$l_z$，一部分是非线性部分$l_p$。图中Product Layer左边Z部分其实就是将Embedding层学到的嵌入直接原封不动地搬来，右边P部分才是重点。注意，product layer 中P部分每个节点是两两Field的embedding对应的“product”结果，而非所有Field的。
+![product-based model](../image/pnn_architecture.png)
+
+- **代码实现**
+
+```python
+class PNN(BaseModel):
+    """Instantiates the Product-based Neural Network architecture.
+
+    :param dnn_feature_columns: An iterable containing all the features used by deep part of the model.
+    :param dnn_hidden_units: list,list of positive integer or empty list, the layer number and units in each layer of deep net
+    :param l2_reg_embedding: float . L2 regularizer strength applied to embedding vector
+    :param l2_reg_dnn: float. L2 regularizer strength applied to DNN
+    :param init_std: float,to use as the initialize std of embedding vector
+    :param seed: integer ,to use as random seed.
+    :param dnn_dropout: float in [0,1), the probability we will drop out a given DNN coordinate.
+    :param dnn_activation: Activation function to use in DNN
+    :param use_inner: bool,whether use inner-product or not.
+    :param use_outter: bool,whether use outter-product or not.
+    :param kernel_type: str,kernel_type used in outter-product,can be ``'mat'`` , ``'vec'`` or ``'num'``
+    :param task: str, ``"binary"`` for  binary logloss or  ``"regression"`` for regression loss
+    :param device: str, ``"cpu"`` or ``"cuda:0"``
+    :param gpus: list of int or torch.device for multiple gpus. If None, run on `device`. `gpus[0]` should be the same gpu with `device`.
+    :return: A PyTorch model instance.
+
+    """
+    def __init__(self, dnn_feature_columns, dnn_hidden_units=(128, 128), l2_reg_embedding=1e-5, l2_reg_dnn=0,
+                 init_std=0.0001, seed=1024, dnn_dropout=0, dnn_activation='relu', use_inner=True, use_outter=False,
+                 kernel_type='mat', task='binary', device='cpu', gpus=None):
+
+        super(PNN, self).__init__([], dnn_feature_columns, l2_reg_linear=0, l2_reg_embedding=l2_reg_embedding,
+                                  init_std=init_std, seed=seed, task=task, device=device, gpus=gpus)
+
+        if kernel_type not in ['mat', 'vec', 'num']:
+            raise ValueError("kernel_type must be mat,vec or num")
+
+        self.use_inner = use_inner
+        self.use_outter = use_outter
+        self.kernel_type = kernel_type
+        self.task = task
+
+        product_out_dim = 0
+        num_inputs = self.compute_input_dim(dnn_feature_columns, include_dense=False, feature_group=True)
+        num_pairs = int(num_inputs * (num_inputs - 1) / 2)
+
+        if self.use_inner:
+            product_out_dim += num_pairs
+            self.innerproduct = InnerProductLayer(device=device)
+
+        if self.use_outter:
+            product_out_dim += num_pairs
+            self.outterproduct = OutterProductLayer(
+                num_inputs, self.embedding_size, kernel_type=kernel_type, device=device)
+
+        self.dnn = DNN(product_out_dim + self.compute_input_dim(dnn_feature_columns), dnn_hidden_units,
+                       activation=dnn_activation, l2_reg=l2_reg_dnn, dropout_rate=dnn_dropout, use_bn=False,
+                       init_std=init_std, device=device)
+
+        self.dnn_linear = nn.Linear(
+            dnn_hidden_units[-1], 1, bias=False).to(device)
+        self.add_regularization_weight(
+            filter(lambda x: 'weight' in x[0] and 'bn' not in x[0], self.dnn.named_parameters()), l2=l2_reg_dnn)
+        self.add_regularization_weight(self.dnn_linear.weight, l2=l2_reg_dnn)
+
+        self.to(device)
+
+    def forward(self, X):
+        sparse_embedding_list, dense_value_list = self.input_from_feature_columns(X, self.dnn_feature_columns,
+                                                                                  self.embedding_dict)
+        linear_signal = torch.flatten(
+            concat_fun(sparse_embedding_list), start_dim=1)
+
+        if self.use_inner:
+            inner_product = torch.flatten(
+                self.innerproduct(sparse_embedding_list), start_dim=1)
+
+        if self.use_outter:
+            outer_product = self.outterproduct(sparse_embedding_list)
+
+        if self.use_outter and self.use_inner:
+            product_layer = torch.cat(
+                [linear_signal, inner_product, outer_product], dim=1)
+        elif self.use_outter:
+            product_layer = torch.cat([linear_signal, outer_product], dim=1)
+        elif self.use_inner:
+            product_layer = torch.cat([linear_signal, inner_product], dim=1)
+        else:
+            product_layer = linear_signal
+
+        dnn_input = combined_dnn_input([product_layer], dense_value_list)
+        dnn_output = self.dnn(dnn_input)
+        dnn_logit = self.dnn_linear(dnn_output)
+        logit = dnn_logit
+
+        y_pred = self.out(logit)
+        return y_pred
+```
 
 ## Wide & Deep 
 
