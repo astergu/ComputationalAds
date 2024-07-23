@@ -55,6 +55,7 @@
 
 CTR预估本质是一个二分类问题，以移动端展示广告推荐为例，依据日志中的用户侧的信息（比如年龄，性别，国籍，手机上安装的app列表）、广告侧的信息（广告id，广告类别，广告标题等）、上下文侧信息（渠道id等），去建模预测用户是否会点击该广告。在CPC（cost-per-click）的广告系统中，广告是通过eCPM（effective cost per mille）来排序的，而eCPM是竞价（bid price）和CTR（click-through rate）的乘积。
 
+![ctr algorithm evolution](../image/ctr_model_architecture_evolution.png)
 
 ![algorithms](../image/algorithms.jpg)
 
