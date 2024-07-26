@@ -9,6 +9,7 @@
 
 - [点击率预估CTR](./md/ctr_model.md)
 - [推荐系统](./md/recomender.md)
+  - [小红书推荐系统 by 王树森](https://github.com/wangshusen/RecommenderSystem/tree/main)
 - [重排 Rerank](./md/rerank.md)
 - [定价](./md/pricing.md)
 

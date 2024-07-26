@@ -1,56 +1,3 @@
-- [主流CTR模型演化](#主流ctr模型演化)
-  - [深度CTR模型的基本框架](#深度ctr模型的基本框架)
-  - [Logistic Regression](#logistic-regression)
-  - [LR + GBDT](#lr--gbdt)
-  - [Product-based Neural Networks](#product-based-neural-networks)
-  - [Wide \& Deep](#wide--deep)
-  - [DeepFM](#deepfm)
-  - [Deep \& Cross Network (DCN)](#deep--cross-network-dcn)
-  - [xDeepFM](#xdeepfm)
-  - [Deep Interest Network](#deep-interest-network)
-  - [Deep Interest Evolution Network](#deep-interest-evolution-network)
-  - [FM/FFM](#fmffm)
-    - [FM](#fm)
-    - [FFM (Field-aware Factorization Machine)](#ffm-field-aware-factorization-machine)
-  - [GBDT+(LR,FM,FFM)](#gbdtlrfmffm)
-  - [DNN](#dnn)
-  - [Embedding+MLP](#embeddingmlp)
-  - [Wide\&Deep](#widedeep)
-  - [DeepFM](#deepfm-1)
-  - [DCN: Deep \& Cross Network](#dcn-deep--cross-network)
-  - [xDeepFM](#xdeepfm-1)
-- [代码实现](#代码实现)
-  - [LR实现](#lr实现)
-- [工程问题](#工程问题)
-  - [线上serving](#线上serving)
-- [评价指标](#评价指标)
-  - [COPC](#copc)
-  - [AUC](#auc)
-  - [Logloss](#logloss)
-  - [GAUC](#gauc)
-- [其他](#其他)
-  - [点击率预估 (CTR)](#点击率预估-ctr)
-    - [特征表示 Feature Representation](#特征表示-feature-representation)
-      - [Embedding表示](#embedding表示)
-    - [FM(Factorization Machine)因子分解机、FFM(Field-aware Factorizatiion Machine)](#fmfactorization-machine因子分解机ffmfield-aware-factorizatiion-machine)
-    - [混合逻辑回归（MLR）](#混合逻辑回归mlr)
-    - [Wide \& Deep Learning (WDL)](#wide--deep-learning-wdl)
-    - [FNN (Factorization-machine supported Neural Network)](#fnn-factorization-machine-supported-neural-network)
-    - [PNN (Product-based Neural Networks)](#pnn-product-based-neural-networks)
-    - [DeepFM](#deepfm-2)
-    - [FTRL](#ftrl)
-    - [DIN](#din)
-    - [评价指标](#评价指标-1)
-      - [AUC](#auc-1)
-    - [RMSE](#rmse)
-      - [RIG](#rig)
-    - [总结](#总结)
-    - [新广告：lookalike、相关广告信息挖掘](#新广告lookalike相关广告信息挖掘)
-    - [Rare Event：贝叶斯平滑、指数平滑](#rare-event贝叶斯平滑指数平滑)
-- [参考](#参考)
-
-
-
 # 主流CTR模型演化
 
 CTR预估本质是一个二分类问题，以移动端展示广告推荐为例，依据日志中的用户侧的信息（比如年龄，性别，国籍，手机上安装的app列表）、广告侧的信息（广告id，广告类别，广告标题等）、上下文侧信息（渠道id等），去建模预测用户是否会点击该广告。在CPC（cost-per-click）的广告系统中，广告是通过eCPM（effective cost per mille）来排序的，而eCPM是竞价（bid price）和CTR（click-through rate）的乘积。
@@ -85,6 +32,7 @@ CTR预估本质是一个二分类问题，以移动端展示广告推荐为例�
 |  ESMM | [Entire Space Multi-Task Model: An Effective Approach for Estimating Post-Click Conversion Rate](https://dl.acm.org/doi/10.1145/3209978.3210104) [SIGIR 2018]  |  | |
 |  MMOE | [Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts](https://dl.acm.org/doi/abs/10.1145/3219819.3220007) [KDD 2018] |   | |
 | PLE  | [Progressive Layered Extraction (PLE): A Novel Multi-Task Learning (MTL) Model for Personalized Recommendations](https://dl.acm.org/doi/10.1145/3383313.3412236) [RecSys 2020]  |  |    |
+| SIM | [Search-based User Interest Modeling with Lifelong Sequential Behavior Data for Click-Through Rate Prediction](https://arxiv.org/pdf/2006.05639) [CIKM 2020] | | |  
 
 
 
@@ -770,6 +718,8 @@ class xDeepFM(BaseModel):
   - RelaImpr $=(\frac{AUC(measured model) - 0.5}{AUC(base model) - 0.5} - 1) \times 100\%$
 
 ![DIN experiments](../image/din_experiments.png)
+- **缺点**
+  - 关注短期兴趣，忽略长期兴趣
 
 - **代码实现**
 
