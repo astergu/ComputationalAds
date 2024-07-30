@@ -1,3 +1,42 @@
+- [主流CTR模型演化](#主流ctr模型演化)
+  - [深度CTR模型的基本框架](#深度ctr模型的基本框架)
+  - [Logistic Regression](#logistic-regression)
+  - [LR + GBDT](#lr--gbdt)
+  - [Product-based Neural Networks](#product-based-neural-networks)
+  - [Wide \& Deep](#wide--deep)
+  - [DeepFM](#deepfm)
+  - [Deep \& Cross Network (DCN)](#deep--cross-network-dcn)
+  - [xDeepFM](#xdeepfm)
+  - [Deep Interest Network](#deep-interest-network)
+  - [DCN V2](#dcn-v2)
+- [工程问题](#工程问题)
+  - [线上serving](#线上serving)
+- [评价指标](#评价指标)
+  - [COPC](#copc)
+  - [AUC](#auc)
+  - [Logloss](#logloss)
+  - [GAUC](#gauc)
+- [其他](#其他)
+  - [点击率预估 (CTR)](#点击率预估-ctr)
+    - [特征表示 Feature Representation](#特征表示-feature-representation)
+      - [Embedding表示](#embedding表示)
+    - [FM(Factorization Machine)因子分解机、FFM(Field-aware Factorizatiion Machine)](#fmfactorization-machine因子分解机ffmfield-aware-factorizatiion-machine)
+    - [混合逻辑回归（MLR）](#混合逻辑回归mlr)
+    - [Wide \& Deep Learning (WDL)](#wide--deep-learning-wdl)
+    - [FNN (Factorization-machine supported Neural Network)](#fnn-factorization-machine-supported-neural-network)
+    - [PNN (Product-based Neural Networks)](#pnn-product-based-neural-networks)
+    - [DeepFM](#deepfm-1)
+    - [FTRL](#ftrl)
+    - [DIN](#din)
+    - [评价指标](#评价指标-1)
+      - [AUC](#auc-1)
+    - [RMSE](#rmse)
+      - [RIG](#rig)
+    - [总结](#总结)
+    - [新广告：lookalike、相关广告信息挖掘](#新广告lookalike相关广告信息挖掘)
+    - [Rare Event：贝叶斯平滑、指数平滑](#rare-event贝叶斯平滑指数平滑)
+- [参考](#参考)
+
 # 主流CTR模型演化
 
 CTR预估本质是一个二分类问题，以移动端展示广告推荐为例，依据日志中的用户侧的信息（比如年龄，性别，国籍，手机上安装的app列表）、广告侧的信息（广告id，广告类别，广告标题等）、上下文侧信息（渠道id等），去建模预测用户是否会点击该广告。在CPC（cost-per-click）的广告系统中，广告是通过eCPM（effective cost per mille）来排序的，而eCPM是竞价（bid price）和CTR（click-through rate）的乘积。
@@ -837,132 +876,10 @@ class DIN(BaseModel):
         return interest_dim
 ```
 
-## Deep Interest Evolution Network
+## DCN V2
 
 - **主要贡献点**
-- **模型**
-
-## FM/FFM
-
-### FM
-
-与LR相比，FM增加了二阶项的信息，通过穷举所有的二阶特征（一阶特征两两组合）并结合特征的有效性（特征权重）来预测点击结果，FM的二阶特征组合过程可拆分成Embedding和内积两个步骤。GBDT虽然可以学习特征交叉组合，但是只适合中低度稀疏数据，容易学到高阶组合。但是对于高度稀疏数据的特征组合，学习效率很低。另外GBDT也不能学习到训练数据中很少或者没有出现的特征组合。但是FM（因子分解机，Factorization Machine）可以通过隐向量的内积提取特征组合，对于很少或没出现的特征组合也可以学习到。
-
-FM的优点就是具有处理二次交叉特征的能力，而且可以实现线性复杂度O(n)，模型训练速度快。
-
-### FFM (Field-aware Factorization Machine)
-
-FFM引入了field概念，FFM将相同性质的特种归于同一个field。同一个categorical特种经过one-hot编码生成的数值特种都可以放入同一个field。
-
-![ffm image](https://www.zhihu.com/equation?tex=f%28x%29%3Dlogistic%28%5CTheta%5ETX%2B%5Csum_%7Bi%3D1%7D%5E%7Bn%7D%5Csum_%7Bj%3Di%2B1%7D%5E%7Bn%7D%7B%3Cv_%7Bi%2Cf_j%7D%2Cv_%7Bj%2Cf_i%7D%3Ex_ix_j%7D%29)
-
-![ffm model](https://www.zhihu.com/equation?tex=%5Cphi%28W%2CX%29%3D%5Csum_%7Bi%3D1%7D%5E%7Bn%7D%7Bw_ix_i%7D%2B%5Csum_%7Bi%3D1%7D%5E%7Bn%7D%5Csum_%7Bj%3Di%2B1%7D%5E%7Bn%7D%7B%28v_%7Bi%2Cf_j%7D%C2%B7v_%7Bj%2Cf_i%7D%29x_ix_j%7D)
-
-FFM模型使用**logistic loss**作为损失函数+L2正则项：
-
-![logistic loss](https://www.zhihu.com/equation?tex=L%3D%5Csum_%7Bi%3D1%7D%5E%7Bn%7Dlog%281%2Bexp%28-y_i%5Cphi%28w%2Cw_i%29%29%29%2B%5Cfrac%7B%5Clambda%7D%7B2%7D%7C%7CW%7C%7C%5E2)
-
-FM是把所有特征都归属于一个field时的FFM模型。
-
-**FFM模型训练时的注意事项**
-
-- **样本归一化**。FFM默认是进行样本数据的归一化的 。若不进行归一化，很容易造成数据inf溢出，进而引起梯度计算的nan错误。因此，样本层面的数据是推荐进行归一化的。
-
-- **特征归一化**。CTR/CVR模型采用了多种类型的源特征，包括数值型和categorical类型等。但是，categorical类编码后的特征取值只有0或1，较大的数值型特征会造成样本归一化后categorical类生成特征的值非常小，没有区分性。例如，一条用户-商品记录，用户为“男”性，商品的销量是5000个（假设其它特征的值为零），那么归一化后特征“sex=male”（性别为男）的值略小于0.0002，而“volume”（销量）的值近似为1。特征“sex=male”在这个样本中的作用几乎可以忽略不计，这是相当不合理的。因此，将源数值型特征的值归一化到[0,1]是非常必要的。
-
-- **省略零值特征**。从FFM模型的表达式可以看出，零值特征对模型完全没有贡献。包含零值特征的一次项和组合项均为零，对于训练模型参数或者目标值预估是没有作用的。因此，可以省去零值特征，提高FFM模型训练和预测的速度，这也是稀疏样本采用FFM的显著优势。
-
-## GBDT+(LR,FM,FFM)
-
-GBDT适合处理连续值特征，而LR、FM、FFM更加适合处理离散化特征。GBDT可以做到一定程度的特征组合，而GBDT的特征组合是多次组合而不仅是与FM和FFM这样的二阶组合而已。GBDT具备一定的特征选择能力（选择最优的特征进行分裂）。
-
-## DNN
-
-在ctr预估场景中，绝大多数特征都是大规模离散化特征，并且交叉类的特征十分重要，如果利用简单的模型如LR的话需要大量的特征工程，即使是GBDT，FM这种具有一定交叉特征能力的模型，交叉能力十分有限，脱离不了特征工程。
-
-DNN具有很强的模型表达能力，有以下优势：
-
-- 模型表达能力强，能够学习出高阶非线性特征。
-- 容易扩充其他类别的特征，如特征是图片或文字类时。
-
-## Embedding+MLP
-
-多层感知机MLP因具有学习高阶特征的能力常常被用在各种深度CTR模型中。MLP主要由若干个全连接层和激活层组成。
-
-## Wide&Deep
-
-将LR和MLP并联即可得到Wide&Deep模型，可同时学习一阶特征和高阶特征。
-
-## DeepFM 
-
-DeepFM是为了解决DNN的不足而推出的一种并行结构模型。将LR、MLP和Quadratic Layer并联可得到DeepFM，注意到MLP和Quadratic Layer共享Group Embedding。DeepFM是目前效率和效果上都表现不错的一个模型。
-
-## DCN: Deep & Cross Network
-
-将LR、MLP和Cross Net并联可得到DCN。
-
-Cross Net是一个堆叠型网络，该部分的初始输入是将f个(1,k)的特征组向量concat成一个(1,f\*k)的向量（不同特征组的嵌入维度可以不同，反正拼起来就对了）。
-
-每层计算过程如下：输入向量和初始输入向量做Cartesian product得到(f\*k,f\*k)的矩阵，再重新投影成(1,k)向量，每一层输出都包含输入向量。
-
-## xDeepFM
-
-将LR、MLP和CIN并联可得到xDeepFM。
-
-CIN也是一个堆叠型网络，该部分的初始输入是一个(f,k)的矩阵，
-
-每层计算过程如下：输入矩阵(Hi, k)和初始输入矩阵沿嵌入维度方向做Cartesian product得到(Hi, f, k)的三维矩阵，再重新投影成(Hi+1,k)矩阵。
-
-CIN的最后一层：将CIN中间层的输出矩阵沿嵌入维度方向做sum pooling得到(H1,1),(H2,1)...(Hl,1)的向量，再将这些向量concat起来作为CIN网络的输出。
-
-
-# 代码实现 
-
-## LR实现
-
-SGD classifier分类器
-
-```python
-# Linear classifiers (SVM, logistic regression, etc.) with SGD training.
-dict_one_hot_encoder = DictVectorizer(sparse=False)
-X_train = dict_one_hot_encoder.fit_transform(X_dict_train)
-sgd_log_reg_model = SGDClassifier(loss='log', penalty=None, fit_intercept=True, learning_rate='constant', eta0=0.01)
-sgd_log_reg_model.fit(X_train, y_train)
-predictions = sgd_log_reg_model.predict_proba(X_test)[:, 1]
-score = roc_auc_score(y_test, predictions)
-```
-
-LR online learning
-
-```python
-sgd_log_reg_model = SGDClassifier(loss='log', penalty=None, fit_intercept=True, learning_rate='constant', eta0=0.01)
-X_dict_train, y_train = process_data(100000)
-dict_one_hot_encoder = DictVectorizer(sparse=False)
-X_train = dict_one_hot_encoder.fit_transform(X_dict_train)
-if load_model == True:
-	l_reg_file = open('../models/logistic_regression_model_ol.sav', 'rb')
-	sgd_log_reg_model = pickle.load(l_reg_file)
-	X_dict_test, y_test_next = process_data(10000, (20 + 1) * 200000)  # n_samples, offset
-	X_test_next = dict_one_hot_encoder.transform(X_dict_test)
-	predict = sgd_log_reg_model.predict_proba(X_test_next)[:, 1]
-	score = roc_auc_score(y_test_next, predict)
-	return 0
-
-# Train and partially fit on 1 million samples
-for i in range(20):
-	X_dict_train, y_train_every = process_data(100000, i * 100000)
-	X_train_every = dict_one_hot_encoder.transform(X_dict_train)
-	sgd_log_reg_model.partial_fit(X_train_every, y_train_every, classes=[0, 1])
-
-X_dict_test, y_test_next = process_data(10000, (i + 1) * 200000)
-X_test_next = dict_one_hot_encoder.transform(X_dict_test)
-
-predict = sgd_log_reg_model.predict_proba(X_test_next)[:, 1]
-score = roc_auc_score(y_test_next, predict)
-l_reg_file = open('../models/logistic_regression_model_ol.sav', "wb")
-pickle.dump(sgd_log_reg_model, l_reg_file)
-l_reg_file.close()
-```
+- 
 
 # 工程问题
 
