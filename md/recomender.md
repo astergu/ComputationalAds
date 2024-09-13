@@ -450,7 +450,13 @@ Let’s fast-forward by a year to Meta’s DLRM (“deep learning for recommende
 
 | Paper | Affiliation | Key Takeaways |
 | ---- | ---- | ---- |
-| [Deep Neural Networks for YouTube Recommendations](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45530.pdf) (RecSys 2016) | YouTube | |
+| [Deep Neural Networks for YouTube Recommendations](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45530.pdf) (RecSys 2016) | YouTube | How Youtube uses embeddings for candidate generation |
+| [Recommending What Video to Watch Next: a Multitask Ranking System](https://dl.acm.org/doi/10.1145/3298689.3346997) (2019) | Youtube | Youtube's multitask learner for ranking | 
+| [Instagram Explorer Recommendation System](https://instagram-engineering.com/powered-by-ai-instagrams-explore-recommender-system-7ca901d2a882)  |  Instagram |  |
+| [Pinterest Pixie](https://medium.com/pinterest-engineering/an-update-on-pixie-pinterests-recommendation-system-6f273f737e1b) | Pinterest |  |
+| [Real-time Personalization using Embeddings for Search Ranking at Airbnb](https://dl.acm.org/doi/abs/10.1145/3219819.3219885) | Airbnb | |
+| [Behavior Sequence Transformer for E-commerce Recommendation in Alibaba](https://arxiv.org/pdf/1905.06874.pdf) | Alibaba | |
+| [Deep Reinforcement Learning for Online Advertising in Recommender Systems](https://arxiv.org/pdf/1909.03602.pdf) | TikTok | |
 | [Neural Collaborative Filtering](https://arxiv.org/pdf/1708.05031) (WWW 2017) | | |
 | [Collaborative Memory Network for Recommendation Systems](https://arxiv.org/pdf/1804.10862) (SIGIR 2018) | | |
 | [Real-time Personalization using Embeddings for Search Ranking at Airbnb](https://dl.acm.org/doi/pdf/10.1145/3219819.3219885) (KDD 2018) | Airbnb | |
