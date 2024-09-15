@@ -101,12 +101,6 @@ The goal of a collaborative filtering recommender system is to generate two vect
 - One common approach for DNN-based recommendation is to use a matrix factorization model as a baseline and then incorporate additional layers of neural networks to capture more complex patterns in the user-item interactions. This is known as a deep matrix factorization model. The neural network layers can be used to learn non-linear transformations of the input features, which can improve the accuracy of the recommendations.
 - Another popular approach for DNN-based recommendation is to use a sequence modeling architecture, such as a recurrent neural network (RNN) or a transformer network. These models can capture temporal dependencies in user behavior and item popularity, allowing for more accurate and personalized recommendations. For example, an RNN can be used to model the sequence of items that a user has interacted with over time, and then use this information to predict which item the user is likely to interact with next.
 
-- 建立`用户到物品`的索引
-  - 记录每个用户最近点击、交互过的物品ID。
-  - 给定任意用户ID，可以找到他最近感兴趣的物品列表。
-- 建立`物品到物品`的索引
-  - 计算物品之间的两两相似度。
-  - 对于每个物品，索引它最相似的k个物品。
 
 ### Two-tower Model
 
@@ -504,7 +498,7 @@ Let’s fast-forward by a year to Meta’s DLRM (“deep learning for recommende
   -  排序 Ranking
      -  特征提取 Feature Representation
         -  特征分为categorical和continuous/ordinal特征。同时，把特征分类为impression特征（有关item的）和query特征（有关用户的）。query特征只需要在per request计算一次，而impression特征需要每个item计算一次。
-        -  据观察，最有用的特征是描述该用户与当前item或者类似item的历史交互信息，比如用户看过该item所在频道的多少个视频，上一次用户看相关主题的视频是什么时候。另外，历史impression的频率也是个有效地特征，比如用户之前被推荐过某视频，但是他没有点积，那么之后会降低这个视频的推荐概率。
+        -  据观察，最有用的特征是描述该用户与当前item或者类似item的历史交互信息，比如用户看过该item所在频道的多少个视频，上一次用户看相关主题的视频是什么时候。另外，历史impression的频率也是个有效的特征，比如用户之前被推荐过某视频，但是他没有点积，那么之后会降低这个视频的推荐概率。
 ![ranking](../image/youtube_ranking.png)
         - 建模类别特征（Embedding Categorical Features）
         - 正则化连续特征（normalizing Continuous Features）
