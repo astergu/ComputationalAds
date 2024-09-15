@@ -42,6 +42,9 @@
     - [Two Towers in RecSys](#two-towers-in-recsys)
 - [经典论文阅读](#经典论文阅读)
   - [Deep Neural Networks for YouTube Recommendations](#deep-neural-networks-for-youtube-recommendations)
+  - [Recommending What Video to Watch Next: a Multitask Ranking System](#recommending-what-video-to-watch-next-a-multitask-ranking-system)
+  - [Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts](#modeling-task-relationships-in-multi-task-learning-with-multi-gate-mixture-of-experts)
+  - [Real-time Personalization using Embeddings for Search Ranking at Airbnb](#real-time-personalization-using-embeddings-for-search-ranking-at-airbnb)
 - [参考](#参考)
 
 # Recommender Systems
@@ -444,10 +447,17 @@ Let’s fast-forward by a year to Meta’s DLRM (“deep learning for recommende
 
 | Paper | Affiliation | Key Takeaways |
 | ---- | ---- | ---- |
-| [Deep Neural Networks for YouTube Recommendations](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45530.pdf) (RecSys 2016) | YouTube | |
+| [Deep Neural Networks for YouTube Recommendations](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45530.pdf) (RecSys 2016) | YouTube | How Youtube uses embeddings for candidate generation |
+| [Recommending What Video to Watch Next: a Multitask Ranking System](https://daiwk.github.io/assets/youtube-multitask.pdf) (2019) | Youtube | Youtube's multitask learner for ranking |
+| [Adaptive Mixtures of Local Experts](http://www.cs.utoronto.ca/~hinton/absps/jjnh91.ps) (1991) | MIT | | 
+| [Modeling Task Relationships with Multi-task Learning with Multi-gate Mixture-of-Experts](https://dl.acm.org/doi/pdf/10.1145/3219819.3220007) (2018) | Google | |
+| [Instagram Explorer Recommendation System](https://instagram-engineering.com/powered-by-ai-instagrams-explore-recommender-system-7ca901d2a882)  |  Instagram |  |
+| [Pinterest Pixie](https://medium.com/pinterest-engineering/an-update-on-pixie-pinterests-recommendation-system-6f273f737e1b) (2018 blog post) | Pinterest |  |
+| [Real-time Personalization using Embeddings for Search Ranking at Airbnb](https://dl.acm.org/doi/abs/10.1145/3219819.3219885) (KDD 2018) | Airbnb | |
+| [Behavior Sequence Transformer for E-commerce Recommendation in Alibaba](https://arxiv.org/pdf/1905.06874.pdf) | Alibaba | |
+| [Deep Reinforcement Learning for Online Advertising in Recommender Systems](https://arxiv.org/pdf/1909.03602.pdf) | TikTok | |
 | [Neural Collaborative Filtering](https://arxiv.org/pdf/1708.05031) (WWW 2017) | | |
 | [Collaborative Memory Network for Recommendation Systems](https://arxiv.org/pdf/1804.10862) (SIGIR 2018) | | |
-| [Real-time Personalization using Embeddings for Search Ranking at Airbnb](https://dl.acm.org/doi/pdf/10.1145/3219819.3219885) (KDD 2018) | Airbnb | |
 
 ## Deep Neural Networks for YouTube Recommendations
 
@@ -512,6 +522,46 @@ Let’s fast-forward by a year to Meta’s DLRM (“deep learning for recommende
   - 结果显示增加隐层的宽度和深度都有助于提升效果，但是考虑到线上serving的CPU时间，实际配置采用1024-wide ReLU + 512-wide ReLU + 256-wide ReLU。
 
 ![experiments](../image/youtube_experiments.png)
+
+## Recommending What Video to Watch Next: a Multitask Ranking System 
+
+![](../image/youtube_multitask.png)
+
+- Multi-task Learning
+  - Multiple objectives
+    - engagement objectives: clicks, degree of engagement with recommended videos
+    - satisfaction objects: likes, leave a rating on the recommendation
+  - Reduce selection bias (e.g., position bias), add a shallow tower to the main model
+- Challenges
+  - Multimodal feature space
+  - Scalability
+- Problem Formulation
+  - We model our ranking problem as a combination of classification problems and regression problems with multiple objectives.
+  - Given a query, candidate, and context, the ranking model predicts the probabilities of user taking actions such as clicks, wathces, likes, and dismissals.
+  - Tasks
+    - binary classification tasks: cross entropy loss
+    - regression tasks: squared loss
+- Architecture
+  - Multi-gate Mixture-of-Experts (MMoE)
+    - a soft-parameter sharing model structure to model task conflicts and relations
+    - It adapts the Mixture-of-Experts (MoE) structure to multitask learning by having the xperts shared across all tasks, while also having a gating network trained for each task.
+
+![](../image/youtube_mmoe.png)
+
+## Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts
+
+- Shared-bottom model may not perform well due to task differences and the relationships between tasks.
+
+## Real-time Personalization using Embeddings for Search Ranking at Airbnb
+
+- List embeddings for short-term real-time personalization
+  - Given a set $S$ of $s$ clicked sessions obtained from $N$ users, where each session $s=(l_1, ..., l_M)\in S$ is defined as an uninterrupted sequence of $M$ listing ids that were clicked by the user. A new session is started whenever there is a time gap of more than 30 minutes between two consecutive user clicks.
+  - Given this dataset, the aim is to learn a $d$-dimensional real-valued representations $v_{l_i}\in \mathbb{R}^d$ of each unique listing $l_i$, such that similar listings lie nearby in the embedding space.
+  - The objective of the model is to learn listing representations using the skip-gram model by maximizing the objective function $L$ over the entire set $S$ of search sessions, defined as $L=\sum_{s\in S}\sum_{l_i\in s}(\sum_{-m\geq j\leq m, i\neq 0}log\mathbb{P}(l_{i+j}|l_i))$
+- User-type & listing type embeddings for long-term personalization 
+  - embeddings trained on bookings
+  - To tackle the sparsity of user actions (bookings), we propose to train embeddings at a level of user type, instead of a particular user id, where type is determined using many-to-one rule-based mapping that leverages known user attributes.
+  - At the same time, we learn listing type embeddings in the same vector space as user type embeddings. 
 
 # 参考
 
