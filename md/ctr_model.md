@@ -1111,3 +1111,4 @@ Netflix 比赛用的 RMSE 指标可以衡量预测的精度，与之类似的指
 
 - [DeepCTR Torch](https://github.com/shenweichen/DeepCTR-Torch/tree/master)
 - Youtube的深度学习推荐系统论文[[Deep Neural Networks for YouTube Recommendations]](https://storage.googleapis.com/gweb-research2023-media/pubtools/pdf/45530.pdf)
+- [点击率预估中的用户行为序列建模](https://mathmach.com/8d9c775e/)

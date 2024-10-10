@@ -31,7 +31,7 @@
         - [Input to the Deep Component](#input-to-the-deep-component)
     - [Deep Factorization Machine / DeepFM (2017)](#deep-factorization-machine--deepfm-2017)
     - [Neural Collaborative Filteing / NCF (2017)](#neural-collaborative-filteing--ncf-2017)
-      - [Deep and Cross Netoworks / DCN (2017)](#deep-and-cross-netoworks--dcn-2017)
+    - [Deep and Cross Netoworks / DCN (2017)](#deep-and-cross-netoworks--dcn-2017)
     - [AutoInt (2019)](#autoint-2019)
     - [DLRM (2019)](#dlrm-2019)
     - [DCN V2 (2020)](#dcn-v2-2020)
@@ -322,7 +322,7 @@ The integration of deep learning into recommender systems witnessed a significan
 
 ![](https://aman.ai/images/papers/NCF.jpg)
 
-#### Deep and Cross Netoworks / DCN (2017)
+### Deep and Cross Netoworks / DCN (2017)
 
 - Wide and Deep has proven the significance of cross features, however it has a huge downside: the cross features need to be manually engineered, which is a tedious process that requires engineering resources, infrastructure, and domain expertise.
 - The key idea of Deep and Cross Networks (DCN), introduced in a [Wang et al. (2017)](https://arxiv.org/abs/1708.05123) by Google is to replace the wide component in Wide and Deep with a “cross neural network”, a neural network dedicated to learning cross features of arbitrarily high order. However, note that DCN (similar to DeepFM) learns this in a brute-force manner simply by considering all possible combinations uniformly (i.e., it calculates all pair-wise interactions), while newer implementations such as AutoInt leverage self-attention to automatically determine the most informative feature interactions, i.e., which feature interactions to pay the most attention to (and which to ignore by setting the attention weights to zero).
