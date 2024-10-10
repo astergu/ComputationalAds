@@ -116,9 +116,6 @@ LR模型的不足在于特征工程耗费了大量的精力，而且即使有经
 
 ```python
 class LogisticRegression(nn.Module):
-    """
-        LR
-    """
     def __init__(self, feature_fields):
         super(LogisticRegression, self).__init__()
         self.feature_fields = feature_fields
@@ -136,7 +133,7 @@ class LogisticRegression(nn.Module):
 
 ## LR + GBDT
 
-GBDT(Gradient Boost Decision Tree)是用来解决LR模型的特征组合问题。GBDT可以用来学习高阶非线性特征组合。对应树的一条路径。通常将一些连续值特征、值空间不大的categorical特征都丢给GBDT模型；空间很大的ID特征留在LR模型中训练，既能做高阶特征组合又可以利用线性模型易于处理大规模稀疏数据的优势。
+GBDT(Gradient Boost Decision Tree)是用来解决LR模型的特征组合问题。GBDT可以用来学习高阶非线性特征组合，对应树的一条路径。通常将一些连续值特征、值空间不大的categorical特征都丢给GBDT模型；空间很大的ID特征留在LR模型中训练，既能做高阶特征组合又可以利用线性模型易于处理大规模稀疏数据的优势。
 
 $f(x)=logistics(gbdtree_1(X) gbdtree_2(X) ...)$
 
